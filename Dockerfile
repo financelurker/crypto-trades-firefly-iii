@@ -7,6 +7,6 @@ RUN python -m pip install python-binance
 RUN python -m pip install cryptocom-exchange
 
 RUN mkdir /opt/crypto-trades-firefly-iii
-COPY src/ /opt/src/
+COPY ./ /opt/crypto-trades-firefly-iii/
 
 CMD cd /opt/crypto-trades-firefly-iii && python src/main.py
