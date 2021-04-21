@@ -7,7 +7,7 @@ from enum import Enum
 import firefly_iii_client
 import urllib3
 
-import src.config as config
+import config as config
 
 
 class TransactionCollection(object):

@@ -1,11 +1,11 @@
 import time
 from threading import Thread
-import src.exchanges.impls as impls
+import exchanges.impls as impls
 
 import config
-from src.backend import firefly_wrapper
+from backend import firefly_wrapper
 import migrate_firefly_identifiers
-from src.importer.sync_timer import SyncTimer
+from importer.sync_timer import SyncTimer
 
 
 def start():

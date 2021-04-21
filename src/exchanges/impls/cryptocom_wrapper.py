@@ -1,9 +1,9 @@
 from cryptocom.exchange import ApiError
 
-from src.exchanges.exchange_interface import CryptoExchangeInterface
-from src.model.transaction import TradeData
+from exchanges.exchange_interface import CryptoExchangeInterface
+from model.transaction import TradeData
 from typing import List
-import src.config as config
+import config as config
 from pprint import pprint
 import cryptocom.exchange as cro
 from syncer import sync

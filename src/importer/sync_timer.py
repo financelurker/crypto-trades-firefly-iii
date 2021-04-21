@@ -1,6 +1,6 @@
-import src.config as config
+import config as config
 import datetime
-import src.importer.sync_logic as sync_logic
+import importer.sync_logic as sync_logic
 
 
 class SyncTimer(object):

@@ -5,7 +5,7 @@ from importlib import import_module
 from typing import List
 
 # iterate through the modules in the current package
-from src.exchanges.exchange_interface import CryptoExchangeModuleMetaClass
+from exchanges.exchange_interface import CryptoExchangeModuleMetaClass
 
 list_of_impl_meta_class_instances: List[CryptoExchangeModuleMetaClass] = []
 list_of_impl_meta_class_names = []

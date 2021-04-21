@@ -1,5 +1,5 @@
-import src.exchanges.impls as impls
-from src.exchanges.exchange_interface import CryptoExchangeInterface
+import exchanges.impls as impls
+from exchanges.exchange_interface import CryptoExchangeInterface
 
 
 def get_available_exchanges():

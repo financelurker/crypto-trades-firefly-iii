@@ -1,7 +1,7 @@
 import abc
 from typing import List
 
-from src.model.transaction import TradingPair, TradeData
+from model.transaction import TradingPair, TradeData
 
 
 class CryptoExchangeInterface(metaclass=abc.ABCMeta):

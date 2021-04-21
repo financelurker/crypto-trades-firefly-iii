@@ -2,12 +2,12 @@ from __future__ import print_function
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from datetime import datetime
-from src.exchanges.exchange_interface import CryptoExchangeInterface, CryptoExchangeModuleMetaClass
-from src.model.transaction import TradeData
+from exchanges.exchange_interface import CryptoExchangeInterface, CryptoExchangeModuleMetaClass
+from model.transaction import TradeData
 from pprint import pprint
 from typing import List
 
-import src.config as config
+import config as config
 
 @CryptoExchangeModuleMetaClass.register
 class BinanceModuleMetaClass(CryptoExchangeModuleMetaClass):

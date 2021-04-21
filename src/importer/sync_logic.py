@@ -1,8 +1,8 @@
-import src.config as config
-import src.backend.firefly_wrapper as firefly_wrapper
-from src.model.transaction import TradeData, TradingPair
-from src.exchanges import exchange_interface_factory
-from src.backend.firefly_wrapper import TransactionCollection, CollectionType
+import config as config
+import backend.firefly_wrapper as firefly_wrapper
+from model.transaction import TradeData, TradingPair
+from exchanges import exchange_interface_factory
+from backend.firefly_wrapper import TransactionCollection, CollectionType
 
 
 def get_relevant_trading_pair_from_trade(trade, list_of_trading_pairs):
