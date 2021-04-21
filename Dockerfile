@@ -9,4 +9,4 @@ RUN python -m pip install cryptocom-exchange
 RUN mkdir /opt/crypto-trades-firefly-iii
 COPY src/ /opt/src/
 
-CMD cd /opt/crypto-trades-firefly-iii && python /src/main.py
+CMD cd /opt/crypto-trades-firefly-iii && python ./src/main.py

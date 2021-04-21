@@ -92,7 +92,7 @@ Pull the image and run the container passing the needed environmental variables.
 
 ```
 docker pull financelurker/crypto-trades-firefly-iii:latest
-docker run --env....
+docker run --env.... financelurker/crypto-trades-firefly-iii:latest
 ```
 
 ## Run as Docker container from repository
