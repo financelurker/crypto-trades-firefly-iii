@@ -1,6 +1,7 @@
 import abc
 from typing import List
 
+from model.savings import InterestData
 from model.transaction import TradingPair, TradeData
 
 
@@ -11,8 +12,8 @@ class CryptoExchangeInterface(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'get_invalid_trading_pairs') and
                 callable(subclass.get_trades) and
                 hasattr(subclass, 'get_trades') and
-                callable(subclass.get_lending_and_staking_interest) and
-                hasattr(subclass, 'get_lending_and_staking_interest') or
+                callable(subclass.get_savings_interests) and
+                hasattr(subclass, 'get_savings_interests') or
                 NotImplemented)
 
     @abc.abstractmethod
@@ -20,11 +21,11 @@ class CryptoExchangeInterface(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_trades(self, from_timestamp: int, to_timestamp: int, list_of_trading_pairs: List[TradingPair]) -> List[List[TradeData]]:
+    def get_trades(self, from_timestamp: int, to_timestamp: int, list_of_trading_pairs: List[TradingPair]) -> List[TradeData]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_lending_and_staking_interest(self):
+    def get_savings_interests(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[InterestData]:
         raise NotImplementedError
 
 

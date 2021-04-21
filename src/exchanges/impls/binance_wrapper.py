@@ -5,6 +5,7 @@ from datetime import datetime
 
 from backend.firefly_wrapper import TransactionCollection
 from exchanges.exchange_interface import CryptoExchangeInterface, CryptoExchangeModuleMetaClass
+from model.savings import InterestData, InterestDue, SavingsType
 from model.transaction import TradeData, TransactionType
 from pprint import pprint
 from typing import List
@@ -42,6 +43,22 @@ class BinanceModuleMetaClass(CryptoExchangeModuleMetaClass):
             return False
 
 
+def get_interest_data_from_binance_data(binance_data, type, due) -> InterestData:
+    amount = binance_data.get('interest')
+    currency = binance_data.get('asset')
+    date = datetime.fromtimestamp(int(binance_data.get('time')) / 1000)
+
+    return InterestData(type, amount, currency, date, due)
+
+
+def get_interests_from_binance_data(interests_binance_data, savings_type, interest_due) -> List[InterestData]:
+    result = []
+    for interest_binance_data in interests_binance_data:
+        inner = get_interest_data_from_binance_data(interest_binance_data, savings_type, interest_due)
+        result.append(inner)
+    return result
+
+
 @CryptoExchangeInterface.register
 class BinanceExchangeInterface(CryptoExchangeInterface):
     client = None
@@ -59,17 +76,6 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
             if config.debug:
                 print('Binance: Connection to your account established.')
             self.client = new_client
-
-            lending_account = self.client.get_lending_account()
-            lending_position = self.client.get_lending_position()
-            lending_product_list = self.client.get_lending_product_list()
-            lending_interest_history_flexible = self.client.get_lending_interest_history(lendingType="DAILY")
-            lending_interest_history_activity = self.client.get_lending_interest_history(lendingType="ACTIVITY")
-            lending_interest_history_fixed = self.client.get_lending_interest_history(lendingType="CUSTOMIZED_FIXED")
-
-            #        lending_purchase_history = client.get_lending_purchase_history()
-            #        lending_daily_quota_left = client.get_lending_daily_quota_left()
-            #        lending_redemption_list = client.get_lending_redemption_history()
         except Exception as e:
             print('Binance: Cannot connect to your account.' % e)
             raise Exception('Binance: Cannot connect to your account.', e)
@@ -77,8 +83,18 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
     def get_invalid_trading_pairs(self) -> List[str]:
         return self.invalid_trading_pairs
 
-    def get_lending_and_staking_interest(self):
-        pass
+    def get_savings_interests(self, from_timestamp, to_timestamp, list_of_assets) -> List[InterestData]:
+        if config.debug:
+            print("Binance:   Get interest from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
+                datetime.fromtimestamp(to_timestamp / 1000 - 1)))
+        result = []
+        lending_interest_history_daily = self.client.get_lending_interest_history(lendingType="DAILY", startTime=from_timestamp, endTime=to_timestamp)
+        result.extend(get_interests_from_binance_data(lending_interest_history_daily, SavingsType.LENDING, InterestDue.DAILY))
+        lending_interest_history_activity = self.client.get_lending_interest_history(lendingType="ACTIVITY", startTime=from_timestamp, endTime=to_timestamp)
+        result.extend(get_interests_from_binance_data(lending_interest_history_activity, SavingsType.LENDING, InterestDue.ACTIVE))
+        lending_interest_history_fixed = self.client.get_lending_interest_history(lendingType="CUSTOMIZED_FIXED", startTime=from_timestamp, endTime=to_timestamp)
+        result.extend(get_interests_from_binance_data(lending_interest_history_fixed, SavingsType.LENDING, InterestDue.FIXED))
+        return result
 
     def get_trades(self, from_timestamp, to_timestamp, list_of_trading_pairs) -> List[TradeData]:
         list_of_trades: List[TradeData] = []

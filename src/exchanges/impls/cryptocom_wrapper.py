@@ -25,7 +25,7 @@ class CryptoComExchangeInterface:
         return self.invalid_trading_pairs
 
     @sync
-    async def get_lending_and_staking_interest(self):
+    async def get_savings_interests(self):
         if not self.connected:
             await self.connect()
         return []

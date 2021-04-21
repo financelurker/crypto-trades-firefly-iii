@@ -359,3 +359,7 @@ def import_transaction_collection(transaction_collection, trading_platform):
 def import_transaction_collections(transaction_collections, trading_platform):
     for transaction_collection in transaction_collections:
         import_transaction_collection(transaction_collection, trading_platform)
+
+
+def import_received_interest(received_interests, firefly_account_collections):
+    pass

@@ -70,9 +70,30 @@ def augment_transaction_collections_with_firefly_accounts(transaction_collection
             augment_transaction_collection_with_firefly_accounts(transaction_collection, firefly_account_collection)
 
 
-def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
-    exchange_interface = exchange_interface_factory.get_specific_exchange_interface(trading_platform)
+def handle_interests(from_timestamp, to_timestamp, init, trading_platform, exchange_interface,
+                     firefly_account_collections, epochs_to_calculate):
+    if init:
+        header_log = trading_platform + ': Importing all historical interests from ' + str(from_timestamp) + " to " + str(to_timestamp)
+    else:
+        header_log = trading_platform + ': Importing interests from ' + str(from_timestamp) + " to " + str(to_timestamp) + ", " + str(epochs_to_calculate) + " intervals."
+    if config.debug:
+        print(header_log)
 
+    print(trading_platform + ': 1. Get received interest from savings from exchange')
+    list_of_assets = []
+    for account_collection in firefly_account_collections:
+        list_of_assets.append(account_collection.security)
+    received_interests = exchange_interface.get_savings_interests(from_timestamp, to_timestamp, list_of_assets)
+
+    if len(received_interests) == 0:
+        print(trading_platform + ':   No new interest received.')
+        return
+
+    print(trading_platform + ": 2. Import received interest to Firefly III")
+    firefly_wrapper.import_received_interest(received_interests, firefly_account_collections)
+
+
+def handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange_interface):
     epochs_to_calculate = get_epochs_differences(from_timestamp, to_timestamp, config.sync_inverval)
     if init:
         header_log = trading_platform + ': Importing all historical trades from ' + str(from_timestamp) + " to " + str(to_timestamp)
@@ -85,25 +106,34 @@ def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     list_of_symbols_and_codes = firefly_wrapper.get_symbols_and_codes(trading_platform)
     list_of_all_trading_pairs = get_list_of_trading_pairs(list_of_symbols_and_codes)
 
-    print(trading_platform + ': 2. Getting trades from crypto currency exchange')
+    print(trading_platform + ': 2. Get trades from crypto currency exchange')
     list_of_trading_pairs = remove_invalid_trading_pairs(list_of_all_trading_pairs, exchange_interface.get_invalid_trading_pairs())
     list_of_trade_data = exchange_interface.get_trades(from_timestamp, to_timestamp, list_of_trading_pairs)
     list_of_trading_pairs = remove_invalid_trading_pairs(list_of_trading_pairs, exchange_interface.get_invalid_trading_pairs())
+    firefly_account_collections = firefly_wrapper.get_firefly_account_collections_for_pairs(list_of_trading_pairs,
+                                                                                            trading_platform)
     if len(list_of_trade_data) == 0:
-        print(trading_platform + ": No new trades found...")
-        return "ok"
+        print(trading_platform + ": No trades to import,")
+        are_transactions_to_import = False
+    else:
+        are_transactions_to_import = True
+    if are_transactions_to_import:
+        print(trading_platform + ': 4. Map transactions to Firefly III accounts and prepare import')
+        new_transaction_collections = get_transaction_collections_from_trade_data(list_of_trade_data)
+        augment_transaction_collections_with_firefly_accounts(new_transaction_collections, firefly_account_collections)
+        print(trading_platform + ': 5. Import new trades as transactions to Firefly III')
+        firefly_wrapper.import_transaction_collections(new_transaction_collections, trading_platform)
+        print(trading_platform + ": 6. Finish import and going to sleep")
 
-    print(trading_platform + ': 3. Getting accounts and currencies from Firefly III')
-    firefly_account_collections = firefly_wrapper.get_firefly_account_collections_for_pairs(list_of_trading_pairs, trading_platform)
+    return firefly_account_collections, epochs_to_calculate
 
-    print(trading_platform + ': 4. Create new transaction collections, prepare import')
-    new_transaction_collections = get_transaction_collections_from_trade_data(list_of_trade_data)
-    augment_transaction_collections_with_firefly_accounts(new_transaction_collections, firefly_account_collections)
 
-    print(trading_platform + ': 5. Importing new trades as transactions to Firefly III')
-    firefly_wrapper.import_transaction_collections(new_transaction_collections, trading_platform)
+def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
+    exchange_interface = exchange_interface_factory.get_specific_exchange_interface(trading_platform)
 
-    print(trading_platform + ": 6. Finishing import and going to sleep")
+    firefly_account_collections, epochs_to_calculate = handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange_interface)
+    handle_interests(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
+
     return "ok"
 
 
