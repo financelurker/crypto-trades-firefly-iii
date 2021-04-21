@@ -1,12 +1,13 @@
 import src.config as config
-import src.firefly.firefly_wrapper as firefly_wrapper
-from src.model.transaction import TransactionCollection, TradeData, CollectionType, TradingPair
+import src.backend.firefly_wrapper as firefly_wrapper
+from src.model.transaction import TradeData, TradingPair
 from src.exchanges import exchange_interface_factory
+from src.backend.firefly_wrapper import TransactionCollection, CollectionType
 
 
-def get_relevant_trading_pair_from_binance_trade(binance_trade, list_of_trading_pairs):
+def get_relevant_trading_pair_from_trade(trade, list_of_trading_pairs):
     for trading_pair in list_of_trading_pairs:
-        if trading_pair.pair in binance_trade.get('symbol'):
+        if trading_pair.pair in trade.get('symbol'):
             return trading_pair
     exit(-9999)
 
@@ -41,24 +42,24 @@ def process_sell_trades(list_of_sell, trading_pair, trading_platform):
     return list_of_new_transaction_collections
 
 
-def binance_trades_of_trading_pair_processor(list_of_binance_trades, list_of_trading_pairs, trading_platform):
+def trades_of_trading_pair_processor(list_of_trades, list_of_trading_pairs, trading_platform):
     list_of_buy = []
     list_of_sell = []
     trading_pair = None
 
-    for binance_trade in list_of_binance_trades:
-        if binance_trade.get('isBuyer'):
+    for trade in list_of_trades:
+        if trade.get('isBuyer'):
             is_buy_order = True
             is_sell_order = False
         else:
             is_buy_order = False
             is_sell_order = True
         if trading_pair is None:
-            trading_pair = get_relevant_trading_pair_from_binance_trade(binance_trade, list_of_trading_pairs)
+            trading_pair = get_relevant_trading_pair_from_trade(trade, list_of_trading_pairs)
         if is_buy_order:
-            list_of_buy.append(binance_trade)
+            list_of_buy.append(trade)
         elif is_sell_order:
-            list_of_sell.append(binance_trade)
+            list_of_sell.append(trade)
 
     result = []
 
@@ -68,10 +69,10 @@ def binance_trades_of_trading_pair_processor(list_of_binance_trades, list_of_tra
     return result
 
 
-def binance_trades_of_trading_pairs_processor(binance_trades_of_trading_pairs, list_of_trading_pairs, trading_platform):
+def trades_of_trading_pairs_processor(trades_of_trading_pairs, list_of_trading_pairs, trading_platform):
     result = []
-    for list_of_binance_trades in binance_trades_of_trading_pairs:
-        result.extend(binance_trades_of_trading_pair_processor(list_of_binance_trades, list_of_trading_pairs, trading_platform))
+    for list_of_trades in trades_of_trading_pairs:
+        result.extend(trades_of_trading_pair_processor(list_of_trades, list_of_trading_pairs, trading_platform))
     return result
 
 
@@ -149,9 +150,9 @@ def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
 
     print(trading_platform + ': 2. Getting trades from crypto currency exchange')
     list_of_trading_pairs = remove_invalid_trading_pairs(list_of_all_trading_pairs, exchange_interface.get_invalid_trading_pairs())
-    binance_trades_of_trading_pairs = exchange_interface.get_trades(from_timestamp, to_timestamp, list_of_trading_pairs)
+    trades_of_trading_pairs = exchange_interface.get_trades(from_timestamp, to_timestamp, list_of_trading_pairs)
     list_of_trading_pairs = remove_invalid_trading_pairs(list_of_trading_pairs, exchange_interface.get_invalid_trading_pairs())
-    if len(binance_trades_of_trading_pairs) == 0:
+    if len(trades_of_trading_pairs) == 0:
         print(trading_platform + ": No new trades found...")
         return "ok"
 
@@ -159,8 +160,8 @@ def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     firefly_account_collections = firefly_wrapper.get_firefly_account_collections_for_pairs(list_of_trading_pairs, trading_platform)
 
     print(trading_platform + ': 4. Create new transaction collections, prepare import')
-    new_transaction_collections = binance_trades_of_trading_pairs_processor(binance_trades_of_trading_pairs,
-                                                                            list_of_trading_pairs, trading_platform)
+    new_transaction_collections = trades_of_trading_pairs_processor(trades_of_trading_pairs,
+                                                                    list_of_trading_pairs, trading_platform)
     augment_transaction_collections_with_firefly_accounts(new_transaction_collections, firefly_account_collections)
 
     print(trading_platform + ': 5. Importing new trades as transactions to Firefly III')

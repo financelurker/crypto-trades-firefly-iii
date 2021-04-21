@@ -1,18 +1,26 @@
 import time
 from threading import Thread
+import src.exchanges.impls as impls
 
 import config
-from src.firefly import firefly_wrapper
+from src.backend import firefly_wrapper
 import migrate_firefly_identifiers
 from src.importer.sync_timer import SyncTimer
 
 
 def start():
     migrate_firefly_identifiers.migrate_identifiers()
-    worker()
+    try:
+        impl_meta_class_instances = impls.get_impl_meta_class_instances()
+        worker(impl_meta_class_instances)
+    except Exception as e:
+        if config.debug:
+            print(e % e)
+        else:
+            print(e)
 
 
-def worker():
+def worker(meta_class_instances):
     if not firefly_wrapper.connect():
         exit(-12)
 
@@ -27,16 +35,22 @@ def worker():
         print("The configured interval is not supported. Use 'hourly' or 'daily' within your config.")
         exit(-749)
 
-    exchanges = [
-        {
-            'name': 'Binance',
-            'timer_object': SyncTimer() if config.binance_enabled else None
-        },
-        {
-            'name': 'Crypto.com',
-            'timer_object': SyncTimer() if config.cryptocom_enabled else None
-        }
-    ]
+    exchanges = []
+
+    for meta_class in meta_class_instances:
+        exchanges.append({
+            'name': meta_class.get_exchange_name(),
+            'timer_object': SyncTimer() if config.can_load_impl(meta_class.get_config_entries()) else None
+        })
+
+    exchanges_available = False
+    for exchange in exchanges:
+        if exchange.get('timer_object') is not None:
+            exchanges_available = True
+
+    if not exchanges_available:
+        print("There are no exchanges configured. Exit!")
+        exit(0)
 
     for exchange in exchanges:
         if exchange.get('timer_object') is None:

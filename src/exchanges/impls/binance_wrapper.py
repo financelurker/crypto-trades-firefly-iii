@@ -2,16 +2,43 @@ from __future__ import print_function
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from datetime import datetime
-from src.exchanges.exchange_interface import CryptoExchangeInterface
+from src.exchanges.exchange_interface import CryptoExchangeInterface, CryptoExchangeModuleMetaClass
 from src.model.transaction import TradeData
 from pprint import pprint
 from typing import List
 
 import src.config as config
 
+@CryptoExchangeModuleMetaClass.register
+class BinanceModuleMetaClass(CryptoExchangeModuleMetaClass):
+
+    @staticmethod
+    def get_instance():
+        return BinanceModuleMetaClass()
+
+    def get_exchange_client(self) -> CryptoExchangeInterface:
+        return BinanceExchangeInterface()
+
+    def get_exchange_name(self) -> str:
+        return "Binance"
+
+    def get_config_entries(self) -> List[str]:
+        return [
+            "BINANCE_API_KEY",
+            "BINANCE_API_SECRET"
+        ]
+
+    def can_connect(self) -> bool:
+        try:
+            new_client = Client(config.binance_api_key, config.binance_api_secret)
+            new_client.get_account()
+            return True
+        except:
+            return False
+
 
 @CryptoExchangeInterface.register
-class BinanceExchangeInterface:
+class BinanceExchangeInterface(CryptoExchangeInterface):
     client = None
     invalid_trading_pairs = []
 
@@ -40,12 +67,12 @@ class BinanceExchangeInterface:
             #        lending_redemption_list = client.get_lending_redemption_history()
         except Exception as e:
             print('Binance: Cannot connect to your account.' % e)
-            exit(-500)
+            raise Exception('Binance: Cannot connect to your account.', e)
 
     def get_invalid_trading_pairs(self) -> List[str]:
         return self.invalid_trading_pairs
 
-    def get_lendings(self):
+    def get_lending_and_staking_interest(self):
         pass
 
     def get_trades(self, from_timestamp, to_timestamp, list_of_trading_pairs) -> List[TradeData]:
@@ -54,7 +81,7 @@ class BinanceExchangeInterface:
         if config.debug:
             print("Binance:   Get trades from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
             datetime.fromtimestamp(to_timestamp / 1000 - 1)))
-            trading_pairs_log_message = get_trading_pair_message_log(list_of_trading_pairs)
+            trading_pairs_log_message = self.get_trading_pair_message_log(list_of_trading_pairs)
             print(trading_pairs_log_message)
 
         for trading_pair in list_of_trading_pairs:
@@ -84,23 +111,14 @@ class BinanceExchangeInterface:
 
         return trades_of_trading_pairs
 
-
-def get_trading_pair_message_log(list_of_trading_pairs):
-    log_message = "Binance:   Trading pairs: ["
-    trading_pair_counter = 0
-    for trading_pair in list_of_trading_pairs:
-        if trading_pair_counter > 0:
-            log_message += ","
-        log_message += " \"" + trading_pair.pair + "\" "
-        trading_pair_counter += 1
-    log_message += "]"
-    return log_message
-
-
-def can_connect() -> bool:
-    try:
-        new_client = Client(config.binance_api_key, config.binance_api_secret)
-        new_client.get_account()
-        return True
-    except:
-        return False
+    @staticmethod
+    def get_trading_pair_message_log(list_of_trading_pairs):
+        log_message = "Binance:   Trading pairs: ["
+        trading_pair_counter = 0
+        for trading_pair in list_of_trading_pairs:
+            if trading_pair_counter > 0:
+                log_message += ","
+            log_message += " \"" + trading_pair.pair + "\" "
+            trading_pair_counter += 1
+        log_message += "]"
+        return log_message

@@ -1,10 +1,29 @@
 from __future__ import print_function
+
 import datetime
-import urllib3
 import hashlib
+from enum import Enum
+
 import firefly_iii_client
-import config
-from src.model import transaction
+import urllib3
+
+import src.config as config
+
+
+class TransactionCollection(object):
+    def __init__(self, trade_data, _from_ff_account, _to_ff_account, _commission_ff_account,
+                 _collection_type, _from_commission_account):
+        self.trade_data = trade_data
+        self.from_ff_account = _from_ff_account
+        self.to_ff_account = _to_ff_account
+        self.commission_account = _commission_ff_account
+        self.collection_type = _collection_type
+        self.from_commission_account = _from_commission_account
+
+
+class CollectionType(Enum):
+    BUY = 1
+    SELL = 2
 
 
 class FireflyAccountCollection(object):
@@ -32,23 +51,23 @@ SERVICE_IDENTIFICATION = "crypto-trades-firefly-iii"
 
 
 def get_acc_fund_key(trading_platform):
-    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower() + ":fund"
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
 
 
 def get_acc_revenue_key(trading_platform):
-    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower() + ":revenue"
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
 
 
 def get_acc_expenses_key(trading_platform):
-    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower() + ":expenses"
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
 
 
 def get_tr_trade_key(trading_platform):
-    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower() + ":trade"
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
 
 
 def get_tr_fee_key(trading_platform):
-    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower() + ":fee"
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
 
 
 def connect():
@@ -68,21 +87,20 @@ def connect():
         configuration.verify_ssl = config.firefly_verify_ssl
         configuration.access_token = config.firefly_access_token
 
-        # Enter a context with an instance of the API client
         with firefly_iii_client.ApiClient(configuration) as api_client:
-            # Create an instance of the API class
-            api_instance = firefly_iii_client.AboutApi(api_client)
-
             try:
-                api_instance.get_about()
+                firefly_iii_client.AboutApi(api_client).get_about()
             except Exception as e:
-                print("Cannot get server instance About information." % e)
+                raise Exception
 
         print('Connection to your Firefly III account established.\n')
         firefly_config = configuration
         return True
     except Exception as e:
-        print('Cannot connect to your Firefly III account.' % e)
+        if config.debug:
+            print("Cannot get data from server. Check the connection or your access token configuration." % e)
+        else:
+            print("Cannot get data from server. Check the connection or your access token configuration.")
         exit(-600)
 
 
@@ -118,7 +136,10 @@ def get_symbols_and_codes(trading_platform):
 
             return list_of_symbols_and_codes
         except Exception as e:
-            print('There was an error getting the accounts' % e)
+            if config.debug:
+                print('There was an error getting the accounts' % e)
+            else:
+                print('There was an error getting the accounts')
             exit(-601)
 
 
@@ -161,7 +182,11 @@ def write_commission(transaction_collection, trading_platform):
                 print(trading_platform + ':   - Writing a new paid commission.')
             transaction_api.store_transaction(new_transaction)
         except Exception as e:
-            print(trading_platform + ':   - There was an error writing a new trading fee. Pprobably a duplicate? here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"')
+            message = trading_platform + ':   - There was an error writing a new trading fee. Pprobably a duplicate? here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"'
+            if config.debug:
+                print(message)
+            else:
+                print(message % e)
 
 
 def hash_transaction(amount, date, description, external_id, source_name, destination_name, tags):
@@ -177,7 +202,7 @@ def write_new_transaction(transaction_collection, trading_platform):
     with firefly_iii_client.ApiClient(firefly_config) as api_client:
         transaction_api = firefly_iii_client.TransactionsApi(api_client)
         list_inner_transactions = []
-        if transaction_collection.collection_type == transaction.CollectionType.BUY:
+        if transaction_collection.collection_type == CollectionType.BUY:
             type_string = "BUY"
         else:
             type_string = "SELL"
@@ -229,7 +254,11 @@ def write_new_transaction(transaction_collection, trading_platform):
             # pprint(new_transaction)
             transaction_api.store_transaction(new_transaction)
         except Exception as e:
-            print(trading_platform + ':   - There was an error writing a new trade. Pprobably a duplicate? here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"')
+            message = trading_platform + ':   - There was an error writing a new trade. Pprobably a duplicate? here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
 
 
 def get_account_from_firefly(security, account_type, notes_keywords):
@@ -249,7 +278,11 @@ def get_account_from_firefly(security, account_type, notes_keywords):
                         if account.attributes.currency_code == security or account.attributes.currency_symbol == security:
                             return account
         except Exception as e:
-            print('There was an error getting the accounts from Firefly III' % e)
+            message = 'There was an error getting the accounts from Firefly III'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
             exit(-604)
     return None
 

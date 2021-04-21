@@ -38,6 +38,17 @@ sync_begin_timestamp = os.environ['SYNC_BEGIN_TIMESTAMP']
 sync_inverval = os.environ['SYNC_TRADES_INTERVAL']
 
 try:
-    debug = get_boolean_from_default_false(os, 'DEBUG')
+    enc_read = os.environ['DEBUG']
+    debug = True
 except Exception as e:
     debug = False
+
+
+def can_load_impl(list_of_config_entries) -> bool:
+    try:
+        result = True
+        for entry in list_of_config_entries:
+            os.environ[entry]
+        return result
+    except:
+        return False
