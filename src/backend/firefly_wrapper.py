@@ -2,28 +2,22 @@ from __future__ import print_function
 
 import datetime
 import hashlib
-from enum import Enum
 
 import firefly_iii_client
 import urllib3
+from firefly_iii_client import ApiException
 
 import config as config
+from model.transaction import TransactionType
 
 
 class TransactionCollection(object):
-    def __init__(self, trade_data, _from_ff_account, _to_ff_account, _commission_ff_account,
-                 _collection_type, _from_commission_account):
+    def __init__(self, trade_data, _from_ff_account, _to_ff_account, _commission_ff_account, _from_commission_account):
         self.trade_data = trade_data
         self.from_ff_account = _from_ff_account
         self.to_ff_account = _to_ff_account
         self.commission_account = _commission_ff_account
-        self.collection_type = _collection_type
         self.from_commission_account = _from_commission_account
-
-
-class CollectionType(Enum):
-    BUY = 1
-    SELL = 2
 
 
 class FireflyAccountCollection(object):
@@ -76,6 +70,7 @@ def connect():
         return True
 
     try:
+        print('--------------------------------------------------------')
         print('Trying to connect to your Firefly III account...')
 
         firefly_iii_client.configuration.verify_ssl = False
@@ -93,7 +88,8 @@ def connect():
             except Exception as e:
                 raise Exception
 
-        print('Connection to your Firefly III account established.\n')
+        print('Connection to your Firefly III account established.')
+        print('--------------------------------------------------------')
         firefly_config = configuration
         return True
     except Exception as e:
@@ -181,12 +177,24 @@ def write_commission(transaction_collection, trading_platform):
             if config.debug:
                 print(trading_platform + ':   - Writing a new paid commission.')
             transaction_api.store_transaction(new_transaction)
-        except Exception as e:
-            message = trading_platform + ':   - There was an error writing a new trading fee. Pprobably a duplicate? here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"'
-            if config.debug:
-                print(message)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate commission transaction detected. Here\'s the trade id: "' + str(
+                    transaction_collection.trade_data.id) + '"')
             else:
+                message: str = trading_platform + ':   - There was an unknown error writing a new trade. Here\'s the trade id: "' + str(
+                    transaction_collection.trade_data.id) + '"'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
+        except Exception as e:
+            message: str = trading_platform + ':   - There was an unknown error writing a new trade. Here\'s the trade id: "' + str(
+                transaction_collection.trade_data.id) + '"'
+            if config.debug:
                 print(message % e)
+            else:
+                print(message)
 
 
 def hash_transaction(amount, date, description, external_id, source_name, destination_name, tags):
@@ -202,7 +210,7 @@ def write_new_transaction(transaction_collection, trading_platform):
     with firefly_iii_client.ApiClient(firefly_config) as api_client:
         transaction_api = firefly_iii_client.TransactionsApi(api_client)
         list_inner_transactions = []
-        if transaction_collection.collection_type == CollectionType.BUY:
+        if transaction_collection.trade_data.type == TransactionType.BUY:
             type_string = "BUY"
         else:
             type_string = "SELL"
@@ -253,8 +261,19 @@ def write_new_transaction(transaction_collection, trading_platform):
                 print(trading_platform + ':   - Writing a new trade.')
             # pprint(new_transaction)
             transaction_api.store_transaction(new_transaction)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate trade transaction detected. Here\'s the trade id: "' + str(
+                    transaction_collection.trade_data.id) + '"')
+            else:
+                message: str = trading_platform + ':   - There was an unknown error writing a new trade. Here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
         except Exception as e:
-            message = trading_platform + ':   - There was an error writing a new trade. Pprobably a duplicate? here\'s the trade id: "' + str(transaction_collection.trade_data.id) + '"'
+            message: str = trading_platform + ':   - There was an unknown error writing a new trade. Here\'s the trade id: "' + str(
+                transaction_collection.trade_data.id) + '"'
             if config.debug:
                 print(message % e)
             else:

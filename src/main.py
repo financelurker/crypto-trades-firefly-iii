@@ -15,7 +15,7 @@ def start():
         worker(impl_meta_class_instances)
     except Exception as e:
         if config.debug:
-            print(e % e)
+            print(str(e) % e)
         else:
             print(e)
 

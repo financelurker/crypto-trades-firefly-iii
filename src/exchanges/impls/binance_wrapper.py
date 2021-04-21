@@ -2,12 +2,17 @@ from __future__ import print_function
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from datetime import datetime
+
+from backend.firefly_wrapper import TransactionCollection
 from exchanges.exchange_interface import CryptoExchangeInterface, CryptoExchangeModuleMetaClass
-from model.transaction import TradeData
+from model.transaction import TradeData, TransactionType
 from pprint import pprint
 from typing import List
 
 import config as config
+
+exchange_name = "Binance"
+
 
 @CryptoExchangeModuleMetaClass.register
 class BinanceModuleMetaClass(CryptoExchangeModuleMetaClass):
@@ -20,7 +25,7 @@ class BinanceModuleMetaClass(CryptoExchangeModuleMetaClass):
         return BinanceExchangeInterface()
 
     def get_exchange_name(self) -> str:
-        return "Binance"
+        return exchange_name
 
     def get_config_entries(self) -> List[str]:
         return [
@@ -76,7 +81,7 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
         pass
 
     def get_trades(self, from_timestamp, to_timestamp, list_of_trading_pairs) -> List[TradeData]:
-        trades_of_trading_pairs = []
+        list_of_trades: List[TradeData] = []
 
         if config.debug:
             print("Binance:   Get trades from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
@@ -96,7 +101,7 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
                 else:
                     my_trades = self.client.get_my_trades(symbol=trading_pair.pair, startTime=from_timestamp, endTime=to_timestamp)
                 if len(my_trades) > 0:
-                    trades_of_trading_pairs.append(my_trades)
+                    list_of_trades.extend(transform_to_trade_data(my_trades, trading_pair))
                     if config.debug:
                         print("Binance:   Found " + str(len(my_trades)) + " trades for " + trading_pair.pair)
             except BinanceAPIException as e:
@@ -109,7 +114,7 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
                 else:
                     pprint(e)
 
-        return trades_of_trading_pairs
+        return list_of_trades
 
     @staticmethod
     def get_trading_pair_message_log(list_of_trading_pairs):
@@ -122,3 +127,40 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
             trading_pair_counter += 1
         log_message += "]"
         return log_message
+
+
+def transform_buy_trade(buy, trading_pair) -> TradeData:
+    commission_amount = buy.get('commission')
+    commission_asset = buy.get('commissionAsset')
+    currency_amount = buy.get('qty')
+    security_amount = buy.get('quoteQty')
+    trade_id = buy.get('id')
+    trade_time = buy.get('time')
+    trading_platform = exchange_name
+    result = TradeData(trading_platform, commission_amount, commission_asset, currency_amount, security_amount,
+                           trading_pair, TransactionType.BUY, trade_id, trade_time)
+    return result
+
+
+def transform_sell_trade(sell, trading_pair) -> TradeData:
+    commission_amount = sell.get('commission')
+    commission_asset = sell.get('commissionAsset')
+    currency_amount = sell.get('quoteQty')
+    security_amount = sell.get('qty')
+    trade_id = sell.get('id')
+    trade_time = sell.get('time')
+    trading_platform = exchange_name
+    return TradeData(trading_platform, commission_amount, commission_asset, currency_amount, security_amount,
+                           trading_pair, TransactionType.SELL, trade_id, trade_time)
+
+
+def transform_to_trade_data(my_trades, trading_pair) -> List[TradeData]:
+    result = []
+
+    for trade in my_trades:
+        if trade.get('isBuyer'):
+            result.append(transform_buy_trade(trade, trading_pair))
+        else:
+            result.append(transform_sell_trade(trade, trading_pair))
+
+    return result
