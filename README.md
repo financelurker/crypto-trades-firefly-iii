@@ -55,31 +55,14 @@ To import your movements from Binance your Firefly III installation has to be ex
 - Currencies for crypto coins/tokens
   - Add custom currencies which you are trading on crypto exchanges (e.g. name "Bitcoin", symbol "₿", code "BTC", digits "8")
 - Create accounts for each of your exchange connections
-  - asset
+  - asset accounts
     - add an asset account for each coin/token
-  - expense
+  - expense account
     - add one account for all expenses on that exchange
-  - revenue
+  - revenue accounts
     - add a revenue account for each coin/token where you get lending interest or staking interest from
   - for all accounts you create
-    - set a specific note in the notes field: "crypto-trades-firefly-iii:<exchange>"
-- Asset Accounts for currency funds on crypto exchanges
-  - Create exactly one account for each coin/token you trade for each crypto exchange (type = 'asset')
-  - Make sure you select the currency for that account, so the code or symbol matches the trading symbol for that currency on the exchange.
-  - Add the "notes identifies" to the notes of that account:
-    - Binance: **"crypto-trades-firefly-iii:binance:fund"**
-    - Crypto.com **"crypto-trades-firefly-iii:crypto.com:fund"**
-- Revenue Accounts for lending/staking revenues
-  - Create exactly one account for each coin/token you trade for each crypto exchange (type = 'revenue')
-  - Make sure you select the currency for that account, so the code or symbol matches the trading symbol for that currency on the exchange.
-  - Add the "notes identifies" to the notes of that account:
-    - Binance: **"crypto-trades-firefly-iii:binance:revenue"**
-    - Crypto.com **"crypto-trades-firefly-iii:crypto.com:revenue"**
-- Expense Accounts for fees and commission
-  - Create exactly one account for each exchange for paid fees and commission.
-  - Add the "notes identifies" to the notes of that account:
-    - Binance: **"crypto-trades-firefly-iii:binance:expenses"**
-    - Crypto.com **"crypto-trades-firefly-iii:crypto.com:expenses"**
+    - set the "notes identifier" in the notes field - see [supported exchanges](README.md#supported-crypto-trading-platform--exchanges-for-trades) for what "notes identifier" to use
 
 ## Working environments
 
