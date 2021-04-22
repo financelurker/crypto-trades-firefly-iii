@@ -88,11 +88,11 @@ class BinanceExchangeInterface(CryptoExchangeInterface):
             print("Binance:   Get interest from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
                 datetime.fromtimestamp(to_timestamp / 1000 - 1)))
         result = []
-        lending_interest_history_daily = self.client.get_lending_interest_history(lendingType="DAILY", startTime=from_timestamp, endTime=to_timestamp)
+        lending_interest_history_daily = self.client.get_lending_interest_history(lendingType="DAILY", startTime=from_timestamp, endTime=to_timestamp, size=100)
         result.extend(get_interests_from_binance_data(lending_interest_history_daily, SavingsType.LENDING, InterestDue.DAILY))
-        lending_interest_history_activity = self.client.get_lending_interest_history(lendingType="ACTIVITY", startTime=from_timestamp, endTime=to_timestamp)
+        lending_interest_history_activity = self.client.get_lending_interest_history(lendingType="ACTIVITY", startTime=from_timestamp, endTime=to_timestamp, size=100)
         result.extend(get_interests_from_binance_data(lending_interest_history_activity, SavingsType.LENDING, InterestDue.ACTIVE))
-        lending_interest_history_fixed = self.client.get_lending_interest_history(lendingType="CUSTOMIZED_FIXED", startTime=from_timestamp, endTime=to_timestamp)
+        lending_interest_history_fixed = self.client.get_lending_interest_history(lendingType="CUSTOMIZED_FIXED", startTime=from_timestamp, endTime=to_timestamp, size=100)
         result.extend(get_interests_from_binance_data(lending_interest_history_fixed, SavingsType.LENDING, InterestDue.FIXED))
         return result
 
