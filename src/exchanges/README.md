@@ -8,7 +8,7 @@ Perfect.
 [Big Picture](../../plantuml/overview.svg)
 <img src="../../plantuml/overview.svg">
 
-## Implementation details
+## Implementation
 
 To add a new exchange as data source you need to implement two classes which super classes are [declared in here](./exchange_interface.py):
 - **AbstractCryptoExchangeClientModule** which is the meta class for your exchange module. It defines meta information and access to the client implementation
