@@ -90,7 +90,7 @@ def handle_interests(from_timestamp, to_timestamp, init, trading_platform, excha
         return
 
     print(trading_platform + ": 2. Import received interest to Firefly III")
-    firefly_wrapper.import_received_interest(received_interests, firefly_account_collections)
+    firefly_wrapper.import_received_interests(received_interests, firefly_account_collections, trading_platform)
 
 
 def handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange_interface):

@@ -8,6 +8,7 @@ import urllib3
 from firefly_iii_client import ApiException
 
 import config as config
+from model.savings import InterestDue
 from model.transaction import TransactionType
 
 
@@ -137,6 +138,68 @@ def get_symbols_and_codes(trading_platform):
             else:
                 print('There was an error getting the accounts')
             exit(-601)
+
+
+def write_new_received_interest_as_transaction(received_interest, account_collection, trading_platform):
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        transaction_api = firefly_iii_client.TransactionsApi(api_client)
+        list_inner_transactions = []
+
+        currency_code = account_collection.asset_account.attributes.currency_code
+        currency_symbol = account_collection.asset_account.attributes.currency_symbol
+        amount = received_interest.amount
+        description = trading_platform + " | INTEREST | Currency: " + currency_code
+
+        if received_interest.due == InterestDue.DAILY:
+            description += " | Daily interest"
+        elif received_interest.due == InterestDue.ACTIVE:
+            description += " | Active interest"
+        elif received_interest.due == InterestDue.FIXED:
+            description += " | Locked interest"
+
+        tags = [trading_platform.lower()]
+        if config.debug:
+            tags.append('dev')
+
+        split = firefly_iii_client.TransactionSplit(
+            amount=amount,
+            date=received_interest.date,
+            description=description,
+            type='deposit',
+            tags=tags,
+            reconciled=True,
+            source_name=account_collection.revenue_account.attributes.name,
+            source_type=account_collection.revenue_account.attributes.type,
+            currency_code=currency_code,
+            currency_symbol=currency_symbol,
+            destination_name=account_collection.asset_account.attributes.name,
+            destination_type=account_collection.asset_account.attributes.type,
+#            external_id=transaction_collection.trade_data.id,
+            notes=get_acc_revenue_key(trading_platform)
+        )
+        split.import_hash_v2 = hash_transaction(split.amount, split.date, split.description, "", split.source_name, split.destination_name, split.tags)
+        list_inner_transactions.append(split)
+        new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
+
+        try:
+            if config.debug:
+                print(trading_platform + ':   - Writing a new received interest.')
+            transaction_api.store_transaction(new_transaction)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate received interest detected.')
+            else:
+                message: str = trading_platform + ':   - There was an unknown error writing a new received interest.'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
+        except Exception as e:
+            message: str = trading_platform + ':   - There was an unknown error writing a new received interest.'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
 
 
 def write_commission(transaction_collection, trading_platform):
@@ -315,7 +378,7 @@ def get_expense_account_for_security(security, trading_platform):
 
 
 def get_revenue_account_for_security(security, trading_platform):
-    return get_account_from_firefly(security, 'revenue', get_acc_revenue_key(trading_platform))
+    return get_account_from_firefly(None, 'revenue', get_acc_revenue_key(trading_platform))
 
 
 def create_firefly_account_collection(security, trading_platform):
@@ -361,5 +424,8 @@ def import_transaction_collections(transaction_collections, trading_platform):
         import_transaction_collection(transaction_collection, trading_platform)
 
 
-def import_received_interest(received_interests, firefly_account_collections):
-    pass
+def import_received_interests(received_interests, firefly_account_collections, trading_platform):
+    for received_interest in received_interests:
+        for account_collection in firefly_account_collections:
+            if received_interest.currency == account_collection.security:
+                write_new_received_interest_as_transaction(received_interest, account_collection, trading_platform)
