@@ -32,6 +32,14 @@ The following movements on your crypto trading platform account will be imported
   - Only 500 transactions will be imported for each trading pair. (I'll fix that in the future with a more sophisticated import query with the Binance API)
   - Rate limiting: if you run this app in debug mode the Binance API will be polled every 10 seconds. You'll probably get blocked sometime from further API calls. Make sure that you're using Binance testnet when running this in debug-mode to not interfer with your IP rates at Binance (or you know what you're doing).
 
+### Savings through lending/staking
+
+- received interest will be imported automatically
+  - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
+  - transactions get a note "crypto-trades-firefly-iii:<crypto exchange>:trade" (e.g. "crypto-trades-firefly-iii:binance:trade")
+- _**Known limitations for Binance:**_
+  - As of now the Binance API doesn't report interest received through staking, only received interest from lending can be imported.
+
 ### ToDos per Crypto Trade Platform
 
   - Trades and trading fees
@@ -60,7 +68,7 @@ To import your movements from Binance your Firefly III installation has to be ex
   - expense account
     - add one account for all expenses on that exchange
   - revenue accounts
-    - add a revenue account for each coin/token where you get lending interest or staking interest from
+    - add one account for all expenses on that exchange
   - for all accounts you create
     - set the "notes identifier" in the notes field - see [supported exchanges](README.md#supported-crypto-trading-platform--exchanges-for-trades) for what "notes identifier" to use
 
