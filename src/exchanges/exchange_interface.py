@@ -5,7 +5,7 @@ from model.savings import InterestData
 from model.transaction import TradingPair, TradeData
 
 
-class CryptoExchangeInterface(metaclass=abc.ABCMeta):
+class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
     @classmethod
     def __subclasshook__(cls, subclass):
         return (callable(subclass.connect) and
@@ -29,7 +29,7 @@ class CryptoExchangeInterface(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class CryptoExchangeModuleMetaClass(metaclass=abc.ABCMeta):
+class AbstractCryptoExchangeClientModule(metaclass=abc.ABCMeta):
     @classmethod
     def __subclasshook__(cls, subclass):
         return (callable(subclass.get_exchange_client) and
@@ -43,7 +43,7 @@ class CryptoExchangeModuleMetaClass(metaclass=abc.ABCMeta):
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_exchange_client(self) -> CryptoExchangeInterface:
+    def get_exchange_client(self) -> AbstractCryptoExchangeClient:
         raise NotImplementedError
         # return here the instance of your client implementation
 

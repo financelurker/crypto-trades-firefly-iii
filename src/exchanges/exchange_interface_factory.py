@@ -1,5 +1,5 @@
 import exchanges.impls as impls
-from exchanges.exchange_interface import CryptoExchangeInterface
+from exchanges.exchange_interface import AbstractCryptoExchangeClient
 
 
 def get_available_exchanges():
@@ -7,7 +7,7 @@ def get_available_exchanges():
     pass
 
 
-def get_specific_exchange_interface(trading_platform: str) -> CryptoExchangeInterface:
+def get_specific_exchange_interface(trading_platform: str) -> AbstractCryptoExchangeClient:
     for instance in impls.list_of_impl_meta_class_instances:
         if trading_platform == instance.get_exchange_name():
             return instance.get_exchange_client()

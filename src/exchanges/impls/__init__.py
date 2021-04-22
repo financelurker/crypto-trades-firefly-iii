@@ -5,17 +5,17 @@ from importlib import import_module
 from typing import List
 
 # iterate through the modules in the current package
-from exchanges.exchange_interface import CryptoExchangeModuleMetaClass
+from exchanges.exchange_interface import AbstractCryptoExchangeClientModule
 
-list_of_impl_meta_class_instances: List[CryptoExchangeModuleMetaClass] = []
+list_of_impl_meta_class_instances: List[AbstractCryptoExchangeClientModule] = []
 list_of_impl_meta_class_names = []
 
 
-def get_impl_meta_class_instances() -> List[CryptoExchangeModuleMetaClass]:
+def get_impl_meta_class_instances() -> List[AbstractCryptoExchangeClientModule]:
     return list_of_impl_meta_class_instances
 
 
-def get_impl_meta_class_names() -> List[CryptoExchangeModuleMetaClass]:
+def get_impl_meta_class_names() -> List[AbstractCryptoExchangeClientModule]:
     return list_of_impl_meta_class_names
 
 
@@ -28,7 +28,7 @@ for (_, module_name, _) in iter_modules([package_dir]):
         attribute = getattr(module, attribute_name)
 
         try:
-            if issubclass(attribute, CryptoExchangeModuleMetaClass) and not attribute_name == 'CryptoExchangeModuleMetaClass':
+            if issubclass(attribute, AbstractCryptoExchangeClientModule) and not attribute_name == 'CryptoExchangeModuleMetaClass':
                 list_of_impl_meta_class_names.append(attribute)
                 list_of_impl_meta_class_instances.append(attribute.get_instance())
         except:

@@ -4,7 +4,7 @@ from binance.exceptions import BinanceAPIException
 from datetime import datetime
 
 from backend.firefly_wrapper import TransactionCollection
-from exchanges.exchange_interface import CryptoExchangeInterface, CryptoExchangeModuleMetaClass
+from exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
 from model.savings import InterestData, InterestDue, SavingsType
 from model.transaction import TradeData, TransactionType
 from pprint import pprint
@@ -15,15 +15,15 @@ import config as config
 exchange_name = "Binance"
 
 
-@CryptoExchangeModuleMetaClass.register
-class BinanceModuleMetaClass(CryptoExchangeModuleMetaClass):
+@AbstractCryptoExchangeClientModule.register
+class BinanceModuleAbstractClient(AbstractCryptoExchangeClientModule):
 
     @staticmethod
     def get_instance():
-        return BinanceModuleMetaClass()
+        return BinanceModuleAbstractClient()
 
-    def get_exchange_client(self) -> CryptoExchangeInterface:
-        return BinanceExchangeInterface()
+    def get_exchange_client(self) -> AbstractCryptoExchangeClient:
+        return BinanceExchangeAbstractClient()
 
     def get_exchange_name(self) -> str:
         return exchange_name
@@ -59,8 +59,8 @@ def get_interests_from_binance_data(interests_binance_data, savings_type, intere
     return result
 
 
-@CryptoExchangeInterface.register
-class BinanceExchangeInterface(CryptoExchangeInterface):
+@AbstractCryptoExchangeClient.register
+class BinanceExchangeAbstractClient(AbstractCryptoExchangeClient):
     client = None
     invalid_trading_pairs = []
 

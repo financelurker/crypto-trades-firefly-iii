@@ -1,6 +1,6 @@
 from cryptocom.exchange import ApiError
 
-from exchanges.exchange_interface import CryptoExchangeInterface
+from exchanges.exchange_interface import AbstractCryptoExchangeClient
 from model.transaction import TradeData
 from typing import List
 import config as config
@@ -9,7 +9,7 @@ import cryptocom.exchange as cro
 from syncer import sync
 
 
-@CryptoExchangeInterface.register
+@AbstractCryptoExchangeClient.register
 class CryptoComExchangeInterface:
 
     connected = False
