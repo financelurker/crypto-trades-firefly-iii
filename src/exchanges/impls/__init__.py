@@ -28,7 +28,7 @@ for (_, module_name, _) in iter_modules([package_dir]):
         attribute = getattr(module, attribute_name)
 
         try:
-            if issubclass(attribute, AbstractCryptoExchangeClientModule) and not attribute_name == 'CryptoExchangeModuleMetaClass':
+            if issubclass(attribute, AbstractCryptoExchangeClientModule) and not attribute_name == 'AbstractCryptoExchangeClientModule':
                 list_of_impl_meta_class_names.append(attribute)
                 list_of_impl_meta_class_instances.append(attribute.get_instance())
         except:

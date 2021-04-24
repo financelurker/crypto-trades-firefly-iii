@@ -18,22 +18,6 @@ except Exception as e:
     firefly_verify_ssl = True
 firefly_access_token = os.environ['FIREFLY_ACCESS_TOKEN']
 
-try:
-    binance_api_key = os.environ['BINANCE_API_KEY']
-    binance_api_secret = os.environ['BINANCE_API_SECRET']
-    binance_enabled = True
-except Exception as e:
-    binance_enabled = False
-
-try:
-    cryptocom_api_key = os.environ['CRYPTOCOM_API_KEY']
-    cryptocom_api_secret = os.environ['CRYPTOCOM_API_SECRET']
-    cryptocom_enabled = False
-except Exception as e:
-    cryptocom_api_key = "test"
-    cryptocom_api_secret = "test"
-    cryptocom_enabled = False
-
 sync_begin_timestamp = os.environ['SYNC_BEGIN_TIMESTAMP']
 sync_inverval = os.environ['SYNC_TRADES_INTERVAL']
 
@@ -42,13 +26,3 @@ try:
     debug = True
 except Exception as e:
     debug = False
-
-
-def can_load_impl(list_of_config_entries) -> bool:
-    try:
-        result = True
-        for entry in list_of_config_entries:
-            os.environ[entry]
-        return result
-    except:
-        return False

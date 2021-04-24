@@ -40,7 +40,7 @@ def worker(meta_class_instances):
     for meta_class in meta_class_instances:
         exchanges.append({
             'name': meta_class.get_exchange_name(),
-            'timer_object': SyncTimer() if config.can_load_impl(meta_class.get_config_entries()) else None
+            'timer_object': SyncTimer() if meta_class.is_enabled() else None
         })
 
     exchanges_available = False

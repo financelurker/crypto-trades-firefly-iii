@@ -13,32 +13,6 @@ def get_transaction_collections_from_trade_data(list_of_trades: List[TradeData])
     return result
 
 
-def get_list_of_trading_pairs(list_of_symbols_and_codes):
-    list_of_trading_pairs = []
-    for symbol_or_code in list_of_symbols_and_codes:
-        for traded_symbol_or_code in list_of_symbols_and_codes:
-            if symbol_or_code == traded_symbol_or_code:
-                continue
-            new_trading_pair = TradingPair(symbol_or_code, traded_symbol_or_code,
-                                           symbol_or_code + traded_symbol_or_code)
-            list_of_trading_pairs.append(new_trading_pair)
-    return list_of_trading_pairs
-
-
-def remove_invalid_trading_pairs(list_of_all_trading_pairs, invalid_trading_pairs):
-    invalid = []
-    result = []
-    for invalid_trading_pair in invalid_trading_pairs:
-        for trading_pair in list_of_all_trading_pairs:
-            if invalid_trading_pair in trading_pair.pair:
-                invalid.append(trading_pair)
-    for invalid_trading_pair in invalid:
-        list_of_all_trading_pairs.remove(invalid_trading_pair)
-    for trading_pair in list_of_all_trading_pairs:
-        result.append(trading_pair)
-    return result
-
-
 def augment_transaction_collection_with_firefly_accounts(transaction_collection, firefly_account_collection):
     if transaction_collection.trade_data.type is TransactionType.BUY:
         if firefly_account_collection.security == transaction_collection.trade_data.trading_pair.security:
@@ -103,17 +77,14 @@ def handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange
         print(header_log)
 
     print(trading_platform + ': 1. Get eligible symbols from existing asset accounts within Firefly III')
-    list_of_symbols_and_codes = firefly_wrapper.get_symbols_and_codes(trading_platform)
-    list_of_all_trading_pairs = get_list_of_trading_pairs(list_of_symbols_and_codes)
+    list_of_trading_pairs = exchange_interface.get_trading_pairs(firefly_wrapper.get_symbols_and_codes(trading_platform))
 
     print(trading_platform + ': 2. Get trades from crypto currency exchange')
-    list_of_trading_pairs = remove_invalid_trading_pairs(list_of_all_trading_pairs, exchange_interface.get_invalid_trading_pairs())
     list_of_trade_data = exchange_interface.get_trades(from_timestamp, to_timestamp, list_of_trading_pairs)
-    list_of_trading_pairs = remove_invalid_trading_pairs(list_of_trading_pairs, exchange_interface.get_invalid_trading_pairs())
     firefly_account_collections = firefly_wrapper.get_firefly_account_collections_for_pairs(list_of_trading_pairs,
                                                                                             trading_platform)
     if len(list_of_trade_data) == 0:
-        print(trading_platform + ": No trades to import,")
+        print(trading_platform + ":   No trades to import.")
         are_transactions_to_import = False
     else:
         are_transactions_to_import = True

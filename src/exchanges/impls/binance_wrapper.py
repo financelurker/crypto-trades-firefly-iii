@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import os
+
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from datetime import datetime
@@ -6,41 +9,48 @@ from datetime import datetime
 from backend.firefly_wrapper import TransactionCollection
 from exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
 from model.savings import InterestData, InterestDue, SavingsType
-from model.transaction import TradeData, TransactionType
+from model.transaction import TradeData, TransactionType, TradingPair
 from pprint import pprint
-from typing import List
-
-import config as config
+from typing import List, Dict
+import config as base_config
 
 exchange_name = "Binance"
 
 
+class BinanceConfig(Dict):
+    failed = False
+    enabled = False
+    initialized = False
+    api_key = None
+    api_secret = None
+
+    def init(self):
+        try:
+            self.api_key =  os.environ['BINANCE_API_KEY']
+            self.api_secret = os.environ['BINANCE_API_SECRET']
+            self.initialized = True
+            self.enabled = True
+        except Exception as e:
+            self.failed = True
+
+
 @AbstractCryptoExchangeClientModule.register
-class BinanceModuleAbstractClient(AbstractCryptoExchangeClientModule):
+class BinanceClientModule(AbstractCryptoExchangeClientModule):
 
     @staticmethod
     def get_instance():
-        return BinanceModuleAbstractClient()
+        return BinanceClientModule()
 
     def get_exchange_client(self) -> AbstractCryptoExchangeClient:
-        return BinanceExchangeAbstractClient()
+        return BinanceClient()
 
     def get_exchange_name(self) -> str:
         return exchange_name
 
-    def get_config_entries(self) -> List[str]:
-        return [
-            "BINANCE_API_KEY",
-            "BINANCE_API_SECRET"
-        ]
-
-    def can_connect(self) -> bool:
-        try:
-            new_client = Client(config.binance_api_key, config.binance_api_secret)
-            new_client.get_account()
-            return True
-        except:
-            return False
+    def is_enabled(self) -> bool:
+        config = BinanceConfig()
+        config.init()
+        return config.enabled
 
 
 def get_interest_data_from_binance_data(binance_data, type, due) -> InterestData:
@@ -60,31 +70,53 @@ def get_interests_from_binance_data(interests_binance_data, savings_type, intere
 
 
 @AbstractCryptoExchangeClient.register
-class BinanceExchangeAbstractClient(AbstractCryptoExchangeClient):
+class BinanceClient(AbstractCryptoExchangeClient):
     client = None
-    invalid_trading_pairs = []
+    config = BinanceConfig()
 
     def __init__(self):
         self.connect()
 
     def connect(self):
         try:
-            if config.debug:
+            if base_config.debug:
                 print('Binance: Trying to connect to your account...')
-            new_client = Client(config.binance_api_key, config.binance_api_secret)
-            new_client.get_account()
-            if config.debug:
+            new_client = Client(self.config.api_key, self.config.api_secret)
+            if not new_client.get_account_status().get('success') == True:
+                raise Exception("Binance: Cannot access your account status.")
+            withdraw_history = new_client.get_withdraw_history()
+            deposit_history = new_client.get_deposit_history()
+            new_client.get_account_status()
+            if base_config.debug:
                 print('Binance: Connection to your account established.')
             self.client = new_client
         except Exception as e:
             print('Binance: Cannot connect to your account.' % e)
             raise Exception('Binance: Cannot connect to your account.', e)
 
-    def get_invalid_trading_pairs(self) -> List[str]:
-        return self.invalid_trading_pairs
+    def get_trading_pairs(self, list_of_symbols_and_codes: List[str]) -> List[TradingPair]:
+        binance_products = self.client.get_products().get('data')
+        potential_trading_pairs = []
+        result = []
+
+        for symbol_or_code in list_of_symbols_and_codes:
+            for traded_symbol_or_code in list_of_symbols_and_codes:
+                if symbol_or_code == traded_symbol_or_code:
+                    continue
+                new_trading_pair = TradingPair(symbol_or_code, traded_symbol_or_code)
+                potential_trading_pairs.append(new_trading_pair)
+
+        for product in binance_products:
+            for potential_trading_pair in potential_trading_pairs:
+                if product.get('st') == 'TRADING' and \
+                        product.get('b') == potential_trading_pair.security and \
+                        product.get('q') == potential_trading_pair.currency:
+                    result.append(potential_trading_pair)
+
+        return result
 
     def get_savings_interests(self, from_timestamp, to_timestamp, list_of_assets) -> List[InterestData]:
-        if config.debug:
+        if base_config.debug:
             print("Binance:   Get interest from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
                 datetime.fromtimestamp(to_timestamp / 1000 - 1)))
         result = []
@@ -99,7 +131,7 @@ class BinanceExchangeAbstractClient(AbstractCryptoExchangeClient):
     def get_trades(self, from_timestamp, to_timestamp, list_of_trading_pairs) -> List[TradeData]:
         list_of_trades: List[TradeData] = []
 
-        if config.debug:
+        if base_config.debug:
             print("Binance:   Get trades from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
             datetime.fromtimestamp(to_timestamp / 1000 - 1)))
             trading_pairs_log_message = self.get_trading_pair_message_log(list_of_trading_pairs)
@@ -108,25 +140,27 @@ class BinanceExchangeAbstractClient(AbstractCryptoExchangeClient):
         for trading_pair in list_of_trading_pairs:
             try:
                 if (to_timestamp - from_timestamp) / 1000 - 1 > 60 * 60 * 24:
-                    trades_total = self.client.get_my_trades(symbol=trading_pair.pair)
+                    trades_total = self.client.get_my_trades(symbol=trading_pair.security + trading_pair.currency)
                     relevant_trades = []
                     for trade in trades_total:
                         if int(trade.get('time')) - from_timestamp >= 0:
                             relevant_trades.append(trade)
                     my_trades = relevant_trades
                 else:
-                    my_trades = self.client.get_my_trades(symbol=trading_pair.pair, startTime=from_timestamp, endTime=to_timestamp)
+                    my_trades = self.client.get_my_trades(symbol=trading_pair.security + trading_pair.currency, startTime=from_timestamp, endTime=to_timestamp)
                 if len(my_trades) > 0:
                     list_of_trades.extend(transform_to_trade_data(my_trades, trading_pair))
-                    if config.debug:
-                        print("Binance:   Found " + str(len(my_trades)) + " trades for " + trading_pair.pair)
+                    if base_config.debug:
+                        print("Binance:   Found " + str(len(my_trades)) + " trades for " + trading_pair.security + trading_pair.currency)
             except BinanceAPIException as e:
                 if e.status_code == 400 and e.code == -1100:
                     # print("Invalid character found in trading pair: " + trading_pair)
-                    self.invalid_trading_pairs.append(trading_pair.pair)
+                    # self.invalid_trading_pairs.append(trading_pair.security + trading_pair.currency)
+                    pass
                 elif e.status_code == 400 and e.code == -1121:
                     # print("Invalid trading pair found: " + trading_pair)
-                    self.invalid_trading_pairs.append(trading_pair.pair)
+                    # self.invalid_trading_pairs.append(trading_pair.security + trading_pair.currency)
+                    pass
                 else:
                     pprint(e)
 
@@ -139,7 +173,7 @@ class BinanceExchangeAbstractClient(AbstractCryptoExchangeClient):
         for trading_pair in list_of_trading_pairs:
             if trading_pair_counter > 0:
                 log_message += ","
-            log_message += " \"" + trading_pair.pair + "\" "
+            log_message += " \"" + trading_pair.security + trading_pair.currency + "\" "
             trading_pair_counter += 1
         log_message += "]"
         return log_message

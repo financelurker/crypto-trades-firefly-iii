@@ -106,19 +106,37 @@ def get_symbols_and_codes(trading_platform):
         # Create an instance of the API class
         accounts_api = firefly_iii_client.AccountsApi(api_client)
 
+        asset_accounts = []
+
         try:
-            accounts = accounts_api.list_account().data
+            accounts = []
+
+            paging = True
+            page = 1
+            while paging:
+                get_accounts_response = accounts_api.list_account(page=page)
+
+                accounts.extend(get_accounts_response.data)
+
+                if get_accounts_response.meta.pagination.total_pages > page:
+                    page += 1
+                else:
+                    paging = False
+
+            for account in accounts:
+                if account.attributes.type == 'asset':
+                    asset_accounts.append(account)
 
             list_of_symbols_and_codes = []
             relevant_accounts = []
 
             notes_identifier = get_acc_fund_key(trading_platform.lower())
 
-            for account in accounts:
-                if account.attributes.type == 'asset' and \
-                        account.attributes.notes is not None and \
-                        notes_identifier in account.attributes.notes:
-                    relevant_accounts.append(account)
+            for account in asset_accounts:
+                notes = account.attributes.notes
+                if notes is not None:
+                    if notes_identifier in notes:
+                        relevant_accounts.append(account)
 
             if config.debug:
                 print(trading_platform + ':   ' + str(relevant_accounts.__len__()) + " relevant accounts found within your Firefly III instance.")
@@ -292,7 +310,7 @@ def write_new_transaction(transaction_collection, trading_platform):
         amount = transaction_collection.trade_data.security_amount
         foreign_amount = float(transaction_collection.trade_data.currency_amount)
         tags = [transaction_collection.trade_data.trading_platform.lower()]
-        description = transaction_collection.trade_data.trading_platform + ' | ' + type_string + " | Security: " + transaction_collection.trade_data.trading_pair.security + " | Currency: " + transaction_collection.trade_data.trading_pair.currency + " | Ticker " + transaction_collection.trade_data.trading_pair.pair
+        description = transaction_collection.trade_data.trading_platform + ' | ' + type_string + " | Security: " + transaction_collection.trade_data.trading_pair.security + " | Currency: " + transaction_collection.trade_data.trading_pair.currency + " | Ticker " + transaction_collection.trade_data.trading_pair.security + transaction_collection.trade_data.trading_pair.currency
         if config.debug:
             tags.append('dev')
 

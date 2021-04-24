@@ -2,24 +2,12 @@
 
 This service lets you import your movements on supported crypto trading platforms to your Firefly III account. Keep an overview of your traded crypto assets.
 
-## Supported crypto trading platform / exchanges for trades
-- Binance (formerly known as [binance-firefly-iii](https://github.com/financelurker/binance-firefly-iii))
-  - "notes identifier": "crypto-trades-firefly-iii:binance"
-
-In the doing:
-- Crypto.com
-- Kraken
-- coinbase
-- ...
-
-This module runs stateless next to your Firefly III instance (as Docker container or standalone) and periodically processes new data from your configured crypto trading platform. Just spin it up and watch your trades being imported right away.
-
 ## Imported Movements from Crypto Trading Platform to Firefly III
 
 The following movements on your crypto trading platform account will be imported to your Firefly III instance:
 
 ### Executed trades
-- creates transactions for each trade happened automatically
+- Creates transactions for each trade happened automatically
   - adds/lowers funds to/from your "security" account - the asset account of the coin you have bought or sold in that trade
   - lowers/adds funds to/from your "currency" account - the asset account of the coin you have sold or bought in that trade
   - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
@@ -34,7 +22,7 @@ The following movements on your crypto trading platform account will be imported
 
 ### Savings through lending/staking
 
-- received interest will be imported automatically
+- Received interest will be imported automatically
   - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
   - transactions get a note "crypto-trades-firefly-iii:<crypto exchange>:trade" (e.g. "crypto-trades-firefly-iii:binance:trade")
 - _**Known limitations for Binance:**_
@@ -46,6 +34,24 @@ The following movements on your crypto trading platform account will be imported
   - Deposits from / Withdrawals to your other crypto addresses
   - Received Interest vía lending or staking
   - On-/Off-ramping from or to SEPA asset account (via IBAN-matching)
+
+## Supported crypto trading platform / exchanges for trades
+- Binance (formerly known as [binance-firefly-iii](https://github.com/financelurker/binance-firefly-iii))
+  - "notes identifier": "crypto-trades-firefly-iii:binance"
+
+In the doing:
+- Kraken
+- coinbase
+- KuCoin
+- bitpanda
+- bitfinex
+- HitBTC
+- Crypto.com
+- Nexo
+- PayPal
+- ...
+
+This module runs stateless next to your Firefly III instance (as Docker container or standalone) and periodically processes new data from your configured crypto trading platform. Just spin it up and watch your trades being imported right away.
 
 # How to Use
 

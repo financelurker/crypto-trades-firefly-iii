@@ -8,8 +8,8 @@ from model.transaction import TradingPair, TradeData
 class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
     @classmethod
     def __subclasshook__(cls, subclass):
-        return (callable(subclass.connect) and
-                hasattr(subclass, 'get_invalid_trading_pairs') and
+        return (callable(subclass.get_trading_pairs) and
+                hasattr(subclass, 'get_trading_pairs') and
                 callable(subclass.get_trades) and
                 hasattr(subclass, 'get_trades') and
                 callable(subclass.get_savings_interests) and
@@ -17,7 +17,7 @@ class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_invalid_trading_pairs(self) -> List[str]:
+    def get_trading_pairs(self, list_of_symbols_and_codes: List[str]) -> List[TradingPair]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -36,10 +36,8 @@ class AbstractCryptoExchangeClientModule(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'get_exchange_client') and
                 callable(subclass.get_exchange_name) and
                 hasattr(subclass, 'get_exchange_name') and
-                callable(subclass.get_config_entries) and
-                hasattr(subclass, 'get_config_entries') and
-                callable(subclass.can_connect) and
-                hasattr(subclass, 'can_connect') or
+                callable(subclass.is_enabled) and
+                hasattr(subclass, 'is_enabled') or
                 NotImplemented)
 
     @abc.abstractmethod
@@ -53,12 +51,6 @@ class AbstractCryptoExchangeClientModule(metaclass=abc.ABCMeta):
         # return here the exchange name which will be used for logging and user-interaction purposes
 
     @abc.abstractmethod
-    def get_config_entries(self) -> List[str]:
+    def is_enabled(self) -> bool:
         raise NotImplementedError
-        # return here the relevant configuration items needed for the specific client implementation
-
-    @abc.abstractmethod
-    def can_connect(self) -> bool:
-        raise NotImplementedError
-        # determines whether or not the plugin can connect to the exchange
-
+        # return here if the plugin is enabled and all needed configuration is set

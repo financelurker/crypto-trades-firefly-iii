@@ -19,10 +19,10 @@ class TransactionType(Enum):
     SELL = 2
 
 
-known_trading_pairs = []
-
 class TradingPair(object):
-    def __init__(self, from_coin, to_coin, pair):
+    def __init__(self, from_coin, to_coin):
         self.security = from_coin
         self.currency = to_coin
-        self.pair = pair
+
+
+known_trading_pairs = []
