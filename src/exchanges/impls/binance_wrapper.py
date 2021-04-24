@@ -73,6 +73,7 @@ def get_interests_from_binance_data(interests_binance_data, savings_type, intere
 class BinanceClient(AbstractCryptoExchangeClient):
     client = None
     config = BinanceConfig()
+    config.init()
 
     def __init__(self):
         self.connect()

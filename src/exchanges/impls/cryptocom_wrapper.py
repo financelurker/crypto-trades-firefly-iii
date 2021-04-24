@@ -19,8 +19,8 @@ class CryptoComConfig(Dict):
 
     def init(self):
         try:
-            self.setdefault("API_KEY", os.environ['CRYPTOCOM_API_KEY'])
-            self.setdefault("API_SECRET", os.environ['CRYPTOCOM_API_SECRET'])
+            self.api_key = os.environ['CRYPTOCOM_API_KEY']
+            self.api_secret = os.environ['CRYPTOCOM_API_SECRET']
             self.initialized = True
             self.enabled = True
         except Exception as e:
@@ -40,11 +40,10 @@ class CryptoComClientModule(AbstractCryptoExchangeClientModule):
     def get_exchange_name(self) -> str:
         return exchange_name
 
-    def get_config_entries(self) -> List[str]:
-        return [
-            "CRYPTOCOM_API_KEY",
-            "CRYPTOCOM_API_SECRET"
-        ]
+    def is_enabled(self) -> bool:
+        config = CryptoComConfig()
+        config.init()
+        return config.enabled
 
 @AbstractCryptoExchangeClient.register
 class CryptoComClient(AbstractCryptoExchangeClient):
@@ -107,7 +106,7 @@ class CryptoComClient(AbstractCryptoExchangeClient):
         await self.exchange.sync_pairs()
         config = CryptoComConfig()
         config.init()
-        self.account = cro.Account(api_key=config.get("API_KEY"), api_secret=config.get("API_SECRET"))
+        self.account = cro.Account(api_key=config.api_key, api_secret=config.api_secret)
         await self.account.sync_pairs()
         await self.account.get_balance()
         self.connected = True
