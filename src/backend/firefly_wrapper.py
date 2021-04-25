@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import datetime
 import hashlib
+from typing import List
 
 import firefly_iii_client
 import urllib3
@@ -10,6 +11,7 @@ from firefly_iii_client import ApiException
 import config as config
 from model.savings import InterestDue
 from model.transaction import TransactionType
+from model.withdrawal_deposit import WithdrawalData, DepositData
 
 
 class TransactionCollection(object):
@@ -63,6 +65,14 @@ def get_tr_trade_key(trading_platform):
 
 def get_tr_fee_key(trading_platform):
     return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
+
+
+def get_withdrawal_unclassified_key(trading_platform):
+    return SERVICE_IDENTIFICATION + ":unclassified-transaction:" + trading_platform.lower()
+
+
+def get_deposit_unclassified_key(trading_platform):
+    return SERVICE_IDENTIFICATION + ":unclassified-transaction:" + trading_platform.lower()
 
 
 def connect():
@@ -448,5 +458,128 @@ def import_received_interests(received_interests, firefly_account_collections, t
             if received_interest.currency == account_collection.security:
                 write_new_received_interest_as_transaction(received_interest, account_collection, trading_platform)
 
-def import_withdrawals(received_interests, firefly_account_collections, trading_platform):
-    pass
+
+def write_new_withdrawal(withdrawal, account_collection, trading_platform):
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        transaction_api = firefly_iii_client.TransactionsApi(api_client)
+        list_inner_transactions = []
+        currency_code = account_collection.asset_account.attributes.currency_code
+        currency_symbol = account_collection.asset_account.attributes.currency_symbol
+        amount = withdrawal.amount
+        tags = [trading_platform.lower()]
+        description = trading_platform + " | WITHDRAWAL (unclassified) | Security: " + withdrawal.asset
+        if config.debug:
+            tags.append('dev')
+
+        split = firefly_iii_client.TransactionSplit(
+            amount=amount,
+            date=datetime.datetime.fromtimestamp(int(withdrawal.timestamp / 1000)),
+            description=description,
+            type='withdrawal',
+            tags=tags,
+            reconciled=True,
+            source_name=account_collection.asset_account.attributes.name,
+            source_type=account_collection.asset_account.attributes.type,
+            currency_code=currency_code,
+            currency_symbol=currency_symbol,
+            destination_name=account_collection.expense_account.attributes.name,
+            destination_type=account_collection.expense_account.attributes.type,
+            external_id=withdrawal.transaction_id,
+            notes=get_withdrawal_unclassified_key(trading_platform)
+        )
+        split.import_hash_v2 = hash_transaction(split.amount, split.date, split.description, split.external_id, split.source_name, split.destination_name, split.tags)
+        list_inner_transactions.append(split)
+        new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
+
+        try:
+            if config.debug:
+                print(trading_platform + ':   - Writing a new withdrawal.')
+            # pprint(new_transaction)
+            transaction_api.store_transaction(new_transaction)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate withdrawal transaction detected. Here\'s the transaction id: "' + str(
+                    withdrawal.transaction_id) + '"')
+            else:
+                message: str = trading_platform + ':   - There was an unknown error writing a new withdrawal. Here\'s the transaction id: "' + str(withdrawal.transaction_id) + '"'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
+        except Exception as e:
+            message: str = trading_platform + ':   - There was an unknown error writing a new withdrawal. Here\'s the transaction id: "' + str(
+                withdrawal.transaction_id) + '"'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
+
+
+def import_withdrawals(withdrawals: List[WithdrawalData], firefly_account_collections, trading_platform):
+    for withdrawal in withdrawals:
+        for account_collection in firefly_account_collections:
+            if withdrawal.asset == account_collection.security:
+                write_new_withdrawal(withdrawal, account_collection, trading_platform)
+
+
+def write_new_deposit(deposit: DepositData, account_collection, trading_platform):
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        transaction_api = firefly_iii_client.TransactionsApi(api_client)
+        list_inner_transactions = []
+        currency_code = account_collection.asset_account.attributes.currency_code
+        currency_symbol = account_collection.asset_account.attributes.currency_symbol
+        amount = deposit.amount
+        tags = [trading_platform.lower()]
+        description = trading_platform + " | DEPOSIT (unclassified) | Security: " + deposit.asset
+        if config.debug:
+            tags.append('dev')
+
+        split = firefly_iii_client.TransactionSplit(
+            amount=amount,
+            date=datetime.datetime.fromtimestamp(int(deposit.timestamp / 1000)),
+            description=description,
+            type='deposit',
+            tags=tags,
+            reconciled=True,
+            source_name=account_collection.revenue_account.attributes.name,
+            source_type=account_collection.revenue_account.attributes.type,
+            currency_code=currency_code,
+            currency_symbol=currency_symbol,
+            destination_name=account_collection.asset_account.attributes.name,
+            destination_type=account_collection.asset_account.attributes.type,
+            external_id=deposit.transaction_id,
+            notes=get_withdrawal_unclassified_key(trading_platform)
+        )
+        split.import_hash_v2 = hash_transaction(split.amount, split.date, split.description, split.external_id, split.source_name, split.destination_name, split.tags)
+        list_inner_transactions.append(split)
+        new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
+
+        try:
+            if config.debug:
+                print(trading_platform + ':   - Writing a new deposit.')
+            # pprint(new_transaction)
+            transaction_api.store_transaction(new_transaction)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate deposit transaction detected. Here\'s the trade id: "' + str(
+                    deposit.transaction_id) + '"')
+            else:
+                message: str = trading_platform + ':   - There was an unknown error writing a new deposit. Here\'s the transaction id: "' + str(deposit.transaction_id) + '"'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
+        except Exception as e:
+            message: str = trading_platform + ':   - There was an unknown error writing a new deposit. Here\'s the transaction id: "' + str(
+                deposit.transaction_id) + '"'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
+
+
+def import_deposits(deposits, firefly_account_collections, trading_platform):
+    for deposit in deposits:
+        for account_collection in firefly_account_collections:
+            if deposit.asset == account_collection.security:
+                write_new_deposit(deposit, account_collection, trading_platform)

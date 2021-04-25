@@ -14,6 +14,7 @@ from model.transaction import TradeData, TransactionType, TradingPair
 from pprint import pprint
 from typing import List, Dict
 import config as base_config
+from model.withdrawal_deposit import WithdrawalData, DepositData
 
 exchange_name = "Binance"
 
@@ -73,9 +74,9 @@ def get_interests_from_binance_data(interests_binance_data, savings_type, intere
 @AbstractCryptoExchangeClient.register
 class BinanceClient(AbstractCryptoExchangeClient):
     client = None
+
     config = BinanceConfig()
     config.init()
-
     def __init__(self):
         self.connect()
 
@@ -151,7 +152,7 @@ class BinanceClient(AbstractCryptoExchangeClient):
         result.extend(get_interests_from_binance_data(lending_interest_history_fixed, SavingsType.LENDING, InterestDue.FIXED))
         return result
 
-    def get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]):
+    def get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[WithdrawalData]:
         if base_config.debug:
             print("Binance:   Get withdrawals from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
                 datetime.fromtimestamp(to_timestamp / 1000 - 1)))
@@ -159,14 +160,54 @@ class BinanceClient(AbstractCryptoExchangeClient):
         from_datetime = datetime.fromtimestamp(from_timestamp / 1000)
         to_datetime = datetime.fromtimestamp(from_timestamp / 1000 + 90 * 24 * 60 * 60)
 
+        all_withdrawal_history = []
         while not from_datetime.timestamp() * 1000 >= to_timestamp:
-            withdrawal_history = self.client.get_withdraw_history(startTime=from_datetime.timestamp() * 1000,
-                                                                  endTime=to_datetime.timestamp() * 1000)
-            pass
+            withdrawal_history = self.client.get_withdraw_history(startTime=int(from_datetime.timestamp() * 1000),
+                                                                  endTime=int(to_datetime.timestamp() * 1000))
+            all_withdrawal_history.extend(withdrawal_history.get('withdrawList'))
             from_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 1)
-            to_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 90 * 24 * 60 * 60)
+            to_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 90 * 24 * 60 * 60) \
+                if to_datetime.timestamp() + 90 * 24 * 60 * 60 * 1000 < to_timestamp else to_timestamp
 
-        return []
+        return [
+            WithdrawalData(
+                trading_platform=exchange_name,
+                amount=binance_withdrawal.get("amount"),
+                asset=binance_withdrawal.get("asset"),
+                timestamp=binance_withdrawal.get("applyTime"),
+                target_address=binance_withdrawal.get("address"),
+                transaction_fee=binance_withdrawal.get("transactionFee"),
+                transaction_id=binance_withdrawal.get("txId")
+            ) for binance_withdrawal in all_withdrawal_history
+        ]
+
+    def get_deposits(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[DepositData]:
+        if base_config.debug:
+            print("Binance:   Get deposits from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
+                datetime.fromtimestamp(to_timestamp / 1000 - 1)))
+
+        from_datetime = datetime.fromtimestamp(from_timestamp / 1000)
+        to_datetime = datetime.fromtimestamp(from_timestamp / 1000 + 90 * 24 * 60 * 60)
+
+        all_deposit_history = []
+        while not from_datetime.timestamp() * 1000 >= to_timestamp:
+            deposit_history = self.client.get_deposit_history(startTime=int(from_datetime.timestamp() * 1000),
+                                                              endTime=int(to_datetime.timestamp() * 1000))
+            all_deposit_history.extend(deposit_history.get('depositList'))
+            from_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 1)
+            to_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 90 * 24 * 60 * 60) \
+                if to_datetime.timestamp() + 90 * 24 * 60 * 60 * 1000 < to_timestamp else to_timestamp
+
+        return [
+            DepositData(
+                trading_platform=exchange_name,
+                amount=binance_deposit.get("amount"),
+                asset=binance_deposit.get("asset"),
+                timestamp=binance_deposit.get("insertTime"),
+                target_address=binance_deposit.get("address"),
+                transaction_id=binance_deposit.get("txId")
+            ) for binance_deposit in all_deposit_history
+        ]
 
     def connect(self):
         try:
@@ -175,8 +216,6 @@ class BinanceClient(AbstractCryptoExchangeClient):
             new_client = Client(self.config.api_key, self.config.api_secret)
             if not new_client.get_account_status().get('success') is True:
                 raise Exception("Binance: Cannot access your account status.")
-            withdraw_history = new_client.get_withdraw_history()
-            deposit_history = new_client.get_deposit_history()
             new_client.get_account_status()
             if base_config.debug:
                 print('Binance: Connection to your account established.')

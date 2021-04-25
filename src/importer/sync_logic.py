@@ -44,6 +44,29 @@ def augment_transaction_collections_with_firefly_accounts(transaction_collection
             augment_transaction_collection_with_firefly_accounts(transaction_collection, firefly_account_collection)
 
 
+def handle_deposits(from_timestamp, to_timestamp, init, trading_platform, exchange_interface,
+                    firefly_account_collections, epochs_to_calculate):
+    if init:
+        header_log = trading_platform + ': Importing all historical deposits from ' + str(from_timestamp) + " to " + str(to_timestamp)
+    else:
+        header_log = trading_platform + ': Importing deposits from ' + str(from_timestamp) + " to " + str(to_timestamp) + ", " + str(epochs_to_calculate) + " intervals."
+    if config.debug:
+        print(header_log)
+
+    print(trading_platform + ': 1. Get deposits from exchange')
+    list_of_assets = []
+    for account_collection in firefly_account_collections:
+        list_of_assets.append(account_collection.security)
+    deposits = exchange_interface.get_deposits(from_timestamp, to_timestamp, list_of_assets)
+
+    if len(deposits) == 0:
+        print(trading_platform + ':   No new deposits found.')
+        return
+
+    print(trading_platform + ": 2. Import deposits to Firefly III")
+    firefly_wrapper.import_deposits(deposits, firefly_account_collections, trading_platform)
+
+
 def handle_withdrawals(from_timestamp, to_timestamp, init, trading_platform, exchange_interface,
                      firefly_account_collections, epochs_to_calculate):
     if init:
@@ -128,6 +151,7 @@ def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     firefly_account_collections, epochs_to_calculate = handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange_interface)
     handle_interests(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_withdrawals(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
+    handle_deposits(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
 
     return "ok"
 

@@ -3,6 +3,7 @@ from typing import List
 
 from model.savings import InterestData
 from model.transaction import TradingPair, TradeData
+from model.withdrawal_deposit import WithdrawalData, DepositData
 
 
 class ExchangeException(Exception):
@@ -22,8 +23,10 @@ class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'get_trades') and
                 callable(subclass.get_savings_interests) and
                 hasattr(subclass, 'get_savings_interests') and
-                callable(subclass.get_savings_interests) and
-                hasattr(subclass, 'get_withdrawals') or
+                callable(subclass.get_withdrawals) and
+                hasattr(subclass, 'get_withdrawals') and
+                callable(subclass.get_deposits) and
+                hasattr(subclass, 'get_deposits') or
                 NotImplemented)
 
     @abc.abstractmethod
@@ -39,7 +42,11 @@ class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]):
+    def get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[WithdrawalData]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_deposits(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[DepositData]:
         raise NotImplementedError
 
 
