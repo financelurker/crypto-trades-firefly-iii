@@ -1,4 +1,4 @@
-# How to connect to another exchange
+# How to add supported exchanges
 
 So you know the API of your exchange and are interested in extending this service to work with a new exchange which isn't supported by now?
 Perfect.

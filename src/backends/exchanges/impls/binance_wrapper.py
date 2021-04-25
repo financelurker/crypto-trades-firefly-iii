@@ -6,7 +6,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from datetime import datetime
 
-from backend.exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule, \
+from backends.exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule, \
     ExchangeUnderMaintenanceException
 from model.savings import InterestData, InterestDue, SavingsType
 from model.transaction import TradeData, TransactionType, TradingPair

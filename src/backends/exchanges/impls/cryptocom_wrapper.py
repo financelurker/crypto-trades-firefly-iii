@@ -1,6 +1,6 @@
 import os
 
-from backend.exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
+from backends.exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
 from model.savings import InterestData
 from model.transaction import TradeData, TradingPair
 from typing import List, Dict
