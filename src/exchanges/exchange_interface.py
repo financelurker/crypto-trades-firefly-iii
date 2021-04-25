@@ -5,6 +5,14 @@ from model.savings import InterestData
 from model.transaction import TradingPair, TradeData
 
 
+class ExchangeException(Exception):
+    pass
+
+
+class ExchangeUnderMaintenanceException(ExchangeException):
+    pass
+
+
 class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -13,7 +21,9 @@ class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
                 callable(subclass.get_trades) and
                 hasattr(subclass, 'get_trades') and
                 callable(subclass.get_savings_interests) and
-                hasattr(subclass, 'get_savings_interests') or
+                hasattr(subclass, 'get_savings_interests') and
+                callable(subclass.get_savings_interests) and
+                hasattr(subclass, 'get_withdrawals') or
                 NotImplemented)
 
     @abc.abstractmethod
@@ -26,6 +36,10 @@ class AbstractCryptoExchangeClient(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_savings_interests(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[InterestData]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]):
         raise NotImplementedError
 
 

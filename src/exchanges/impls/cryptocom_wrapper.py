@@ -5,7 +5,7 @@ from cryptocom.exchange import ApiError
 from exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
 from model.savings import InterestData
 from model.transaction import TradeData, TradingPair
-from typing import List, Dict, Mapping
+from typing import List, Dict
 import cryptocom.exchange as cro
 from syncer import sync
 
@@ -83,6 +83,8 @@ class CryptoComClient(AbstractCryptoExchangeClient):
 
     @sync
     async def get_trades(self, from_timestamp, to_timestamp, list_of_trading_pairs) -> List[TradeData]:
+        if not self.connected:
+            await self.connect()
         for trading_pair in list_of_trading_pairs:
             pair = self.list_of_pairs.get(trading_pair.security + "_" + trading_pair.currency)
             load_more = True
@@ -92,13 +94,20 @@ class CryptoComClient(AbstractCryptoExchangeClient):
                 if len(trades) < 200:
                     load_more = False
                 pass
-
         return []
 
     @sync
     async def get_savings_interests(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[InterestData]:
         if not self.connected:
             await self.connect()
+        load_more = True
+        page = 0
+        while (load_more):
+            interest_history = \
+                self.account.get_interest_history(start_ts=from_timestamp, end_ts=to_timestamp, page=page)
+            if len(interest_history) < 20:
+                load_more = False
+            pass
         return []
 
     async def connect(self):

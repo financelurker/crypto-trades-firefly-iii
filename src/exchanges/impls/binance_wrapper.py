@@ -7,7 +7,8 @@ from binance.exceptions import BinanceAPIException
 from datetime import datetime
 
 from backend.firefly_wrapper import TransactionCollection
-from exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
+from exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule, \
+    ExchangeUnderMaintenanceException
 from model.savings import InterestData, InterestDue, SavingsType
 from model.transaction import TradeData, TransactionType, TradingPair
 from pprint import pprint
@@ -78,23 +79,6 @@ class BinanceClient(AbstractCryptoExchangeClient):
     def __init__(self):
         self.connect()
 
-    def connect(self):
-        try:
-            if base_config.debug:
-                print('Binance: Trying to connect to your account...')
-            new_client = Client(self.config.api_key, self.config.api_secret)
-            if not new_client.get_account_status().get('success') == True:
-                raise Exception("Binance: Cannot access your account status.")
-            withdraw_history = new_client.get_withdraw_history()
-            deposit_history = new_client.get_deposit_history()
-            new_client.get_account_status()
-            if base_config.debug:
-                print('Binance: Connection to your account established.')
-            self.client = new_client
-        except Exception as e:
-            print('Binance: Cannot connect to your account.' % e)
-            raise Exception('Binance: Cannot connect to your account.', e)
-
     def get_trading_pairs(self, list_of_symbols_and_codes: List[str]) -> List[TradingPair]:
         binance_products = self.client.get_products().get('data')
         potential_trading_pairs = []
@@ -114,19 +98,6 @@ class BinanceClient(AbstractCryptoExchangeClient):
                         product.get('q') == potential_trading_pair.currency:
                     result.append(potential_trading_pair)
 
-        return result
-
-    def get_savings_interests(self, from_timestamp, to_timestamp, list_of_assets) -> List[InterestData]:
-        if base_config.debug:
-            print("Binance:   Get interest from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
-                datetime.fromtimestamp(to_timestamp / 1000 - 1)))
-        result = []
-        lending_interest_history_daily = self.client.get_lending_interest_history(lendingType="DAILY", startTime=from_timestamp, endTime=to_timestamp, size=100)
-        result.extend(get_interests_from_binance_data(lending_interest_history_daily, SavingsType.LENDING, InterestDue.DAILY))
-        lending_interest_history_activity = self.client.get_lending_interest_history(lendingType="ACTIVITY", startTime=from_timestamp, endTime=to_timestamp, size=100)
-        result.extend(get_interests_from_binance_data(lending_interest_history_activity, SavingsType.LENDING, InterestDue.ACTIVE))
-        lending_interest_history_fixed = self.client.get_lending_interest_history(lendingType="CUSTOMIZED_FIXED", startTime=from_timestamp, endTime=to_timestamp, size=100)
-        result.extend(get_interests_from_binance_data(lending_interest_history_fixed, SavingsType.LENDING, InterestDue.FIXED))
         return result
 
     def get_trades(self, from_timestamp, to_timestamp, list_of_trading_pairs) -> List[TradeData]:
@@ -166,6 +137,59 @@ class BinanceClient(AbstractCryptoExchangeClient):
                     pprint(e)
 
         return list_of_trades
+
+    def get_savings_interests(self, from_timestamp, to_timestamp, list_of_assets) -> List[InterestData]:
+        if base_config.debug:
+            print("Binance:   Get interest from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
+                datetime.fromtimestamp(to_timestamp / 1000 - 1)))
+        result = []
+        lending_interest_history_daily = self.client.get_lending_interest_history(lendingType="DAILY", startTime=from_timestamp, endTime=to_timestamp, size=100)
+        result.extend(get_interests_from_binance_data(lending_interest_history_daily, SavingsType.LENDING, InterestDue.DAILY))
+        lending_interest_history_activity = self.client.get_lending_interest_history(lendingType="ACTIVITY", startTime=from_timestamp, endTime=to_timestamp, size=100)
+        result.extend(get_interests_from_binance_data(lending_interest_history_activity, SavingsType.LENDING, InterestDue.ACTIVE))
+        lending_interest_history_fixed = self.client.get_lending_interest_history(lendingType="CUSTOMIZED_FIXED", startTime=from_timestamp, endTime=to_timestamp, size=100)
+        result.extend(get_interests_from_binance_data(lending_interest_history_fixed, SavingsType.LENDING, InterestDue.FIXED))
+        return result
+
+    def get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]):
+        if base_config.debug:
+            print("Binance:   Get withdrawals from " + str(datetime.fromtimestamp(from_timestamp / 1000)) + " to " + str(
+                datetime.fromtimestamp(to_timestamp / 1000 - 1)))
+
+        from_datetime = datetime.fromtimestamp(from_timestamp / 1000)
+        to_datetime = datetime.fromtimestamp(from_timestamp / 1000 + 90 * 24 * 60 * 60)
+
+        while not from_datetime.timestamp() >= to_timestamp:
+            withdrawal_history = self.client.get_withdraw_history(startTime=from_datetime.timestamp() * 1000,
+                                                                  endTime=to_datetime.timestamp() * 1000)
+            pass
+            from_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 1)
+            to_datetime = datetime.fromtimestamp(to_datetime.timestamp() + 90 * 24 * 60 * 60)
+
+        return []
+
+    def connect(self):
+        try:
+            if base_config.debug:
+                print('Binance: Trying to connect to your account...')
+            new_client = Client(self.config.api_key, self.config.api_secret)
+            if not new_client.get_account_status().get('success') is True:
+                raise Exception("Binance: Cannot access your account status.")
+            withdraw_history = new_client.get_withdraw_history()
+            deposit_history = new_client.get_deposit_history()
+            new_client.get_account_status()
+            if base_config.debug:
+                print('Binance: Connection to your account established.')
+            self.client = new_client
+        except BinanceAPIException as be:
+            if be.code == 1 and be.status_code == 503 and be.message == "System is under maintenance.":
+                raise ExchangeUnderMaintenanceException()
+            else:
+                print('Binance: Cannot connect to your account.' % be)
+                raise Exception('Binance: Cannot connect to your account.', be)
+        except Exception as e:
+            print('Binance: Cannot connect to your account.' % e)
+            raise Exception('Binance: Cannot connect to your account.', e)
 
     @staticmethod
     def get_trading_pair_message_log(list_of_trading_pairs):

@@ -447,3 +447,6 @@ def import_received_interests(received_interests, firefly_account_collections, t
         for account_collection in firefly_account_collections:
             if received_interest.currency == account_collection.security:
                 write_new_received_interest_as_transaction(received_interest, account_collection, trading_platform)
+
+def import_withdrawals(received_interests, firefly_account_collections, trading_platform):
+    pass
