@@ -159,7 +159,7 @@ class BinanceClient(AbstractCryptoExchangeClient):
         from_datetime = datetime.fromtimestamp(from_timestamp / 1000)
         to_datetime = datetime.fromtimestamp(from_timestamp / 1000 + 90 * 24 * 60 * 60)
 
-        while not from_datetime.timestamp() >= to_timestamp:
+        while not from_datetime.timestamp() * 1000 >= to_timestamp:
             withdrawal_history = self.client.get_withdraw_history(startTime=from_datetime.timestamp() * 1000,
                                                                   endTime=to_datetime.timestamp() * 1000)
             pass
