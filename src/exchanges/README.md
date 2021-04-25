@@ -35,6 +35,18 @@ To add a new exchange as data source you need to implement two classes which sup
       - **from_timestamp: int:** a timestamp in milli-seconds from where received interest should be considered for import
       - **to_timestamp: int:** a timestamp in milli-seconds to where received interest should be considered for import
       - **list_of_assets: List[str]:** a list of assets where there are eligible asset accounts within Firefly-III and received interest can be imported to. Example: ["BTC", "ETH", "EUR", "USD"]
+  - **get_withdrawals(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[WithdrawalData]**
+    - Description: Gets and returns all withdrawals from that exchange
+    - Parameters:
+      - **from_timestamp: int:** a timestamp in milli-seconds from where withdrawals should be considered for import
+      - **to_timestamp: int:** a timestamp in milli-seconds to where withdrawals should be considered for import
+      - **list_of_assets: List[str]:** a list of assets where there are eligible asset accounts within Firefly-III and withdrawals can be imported to. Example: ["BTC", "ETH", "EUR", "USD"]
+  - **get_deposits(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[DepositData]**
+    - Description: Gets and returns all deposits to that exchange
+    - Parameters:
+      - **from_timestamp: int:** a timestamp in milli-seconds from where deposits should be considered for import
+      - **to_timestamp: int:** a timestamp in milli-seconds to where deposits should be considered for import
+      - **list_of_assets: List[str]:** a list of assets where there are eligible asset accounts within Firefly-III and deposits can be imported to. Example: ["BTC", "ETH", "EUR", "USD"]
 
 When you have those classes implemented add your module (*.py file) to [the impl package](./impls). Implementations of AbstractCryptoExchangeClientModule in that package will be picked up automatically during initialization phase of the service.
 
