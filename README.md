@@ -180,9 +180,15 @@ Make sure you have them set as there is no exception handling for missing values
   - Optional
   - Default: false
 
-# How to add exchanges
+# How to extend this service
 
-Please see the documentation on [how to extend this service](src/backend/exchanges).
+## Add supported Exchanges
+
+Please see the documentation on [how to add supported exchanges](src/backends/exchanges).
+
+## Add supported Blockchains
+
+Please see the documentation on [how to add supported Blockchains](src/backends/public_ledgers).
 
 # Disclaimer
 This app needs access tokens for your Firefly III instance, and access tokens/API-Keys for your crypto trading platform account. It is absolutely okay to only give read-permissions to that access tokens/API-Keys, as there will be no writing actions to crypto trading platform by this service.

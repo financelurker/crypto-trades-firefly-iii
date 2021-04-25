@@ -1,9 +1,9 @@
 import time
 from threading import Thread
-import backend.exchanges.impls as impls
+import backends.exchanges as exchanges
 
 import config
-from backend.firefly import firefly_wrapper
+from backends.firefly import firefly_wrapper
 import migrate_firefly_identifiers
 from importer.sync_timer import SyncTimer
 
@@ -11,7 +11,7 @@ from importer.sync_timer import SyncTimer
 def start():
     migrate_firefly_identifiers.migrate_identifiers()
     try:
-        impl_meta_class_instances = impls.get_impl_meta_class_instances()
+        impl_meta_class_instances = exchanges.get_impl_meta_class_instances()
         worker(impl_meta_class_instances)
     except Exception as e:
         if config.debug:

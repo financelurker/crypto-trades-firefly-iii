@@ -1,12 +1,11 @@
 import config as config
-import backend.firefly.firefly_wrapper as firefly_wrapper
-from backend.ledger import supported_blockchains
+import backends.firefly.firefly_wrapper as firefly_wrapper
 from model.transaction import TradeData, TransactionType
-from backend.exchanges import exchange_interface_factory
-from backend.firefly.firefly_wrapper import TransactionCollection
+from backends.exchanges import exchange_interface_factory
+from backends.firefly.firefly_wrapper import TransactionCollection
 from typing import List
 import re
-
+from backends.public_ledgers import available_explorer
 
 def get_transaction_collections_from_trade_data(list_of_trades: List[TradeData]):
     result = []
@@ -170,6 +169,9 @@ def get_transactions_from_blockchain(firefly_transactions, supported_blockchains
 
 def handle_unclassified_transactions(trading_platform):
     # 1. get accounts with xPub in notes and get addresses from xPub
+    supported_blockchain = {}
+    for explorer_module in available_explorer:
+        supported_blockchain.setdefault(explorer_module.get_blockchain_name(), explorer_module.get_blockchain_explorer())
     account_collections = [
         firefly_wrapper.create_firefly_account_collection(security, trading_platform)
         for security in supported_blockchains.keys()
