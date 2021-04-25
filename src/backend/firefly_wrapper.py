@@ -371,6 +371,65 @@ def write_new_transaction(transaction_collection, trading_platform):
                 print(message)
 
 
+def get_accounts_from_firefly(supported_blockchain, account_type, notes_keywords):
+    result = []
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        # Create an instance of the API class
+        accounts_api = firefly_iii_client.AccountsApi(api_client)
+        try:
+            accounts = []
+            page = 0
+            load_again = True
+            while load_again:
+                new_accounts = accounts_api.list_account(page=page).data
+                accounts.extend(new_accounts)
+                if len(new_accounts) < 50:
+                    load_again = False
+                else:
+                    page += 1
+
+            for account in accounts:
+                if account.attributes.type == account_type and \
+                        account.attributes.notes is not None and \
+                        notes_keywords in account.attributes.notes and \
+                        (account.attributes.currency_code == supported_blockchain or
+                         account.attributes.currency_symbol == supported_blockchain):
+                    result.append(account)
+        except Exception as e:
+            message = 'There was an error getting the accounts from Firefly III'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
+            exit(-604)
+    return result
+
+
+def get_transactions(notes_keyword, supported_blockchains):
+    result = []
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        transaction_api = firefly_iii_client.TransactionsApi(api_client)
+        try:
+            transactions = transaction_api.list_transaction(type="all").data
+
+            for transaction in transactions:
+                for inner_transaction in transaction.attributes.transactions:
+                    if inner_transaction.notes is not None and \
+                            notes_keyword in inner_transaction.notes and \
+                            (any(inner_transaction.currency_code in s for s in supported_blockchains) or
+                             any(inner_transaction.currency_symbol in s for s in supported_blockchains)):
+                        result.append(transaction)
+                        break
+        except Exception as e:
+            message = 'There was an error getting the transactions from Firefly III'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
+            exit(-604)
+    return result
+
+
 def get_account_from_firefly(security, account_type, notes_keywords):
     with firefly_iii_client.ApiClient(firefly_config) as api_client:
         # Create an instance of the API class
@@ -395,6 +454,10 @@ def get_account_from_firefly(security, account_type, notes_keywords):
                 print(message)
             exit(-604)
     return None
+
+
+def get_firefly_accounts_for_crypto_currency(supported_blockchain, identifier):
+    return get_accounts_from_firefly(supported_blockchain, 'asset', identifier)
 
 
 def get_asset_account_for_security(security, trading_platform):
@@ -583,3 +646,9 @@ def import_deposits(deposits, firefly_account_collections, trading_platform):
         for account_collection in firefly_account_collections:
             if deposit.asset == account_collection.security:
                 write_new_deposit(deposit, account_collection, trading_platform)
+
+
+def rewrite_unclassified_transactions(transactions, account_address_mapping, account_collections):
+    for transaction in transactions:
+        pass
+    pass

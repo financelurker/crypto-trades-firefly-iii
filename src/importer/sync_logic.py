@@ -1,9 +1,17 @@
 import config as config
 import backend.firefly_wrapper as firefly_wrapper
+from importer import blockchain_info_client, neotracker_io_client
 from model.transaction import TradeData, TradingPair, TransactionType
 from exchanges import exchange_interface_factory
 from backend.firefly_wrapper import TransactionCollection
 from typing import List
+import re
+
+
+supported_blockchains = {
+    "BTC": {"client": blockchain_info_client, "identifier": "xpub", "expression": r"xpub=\"([a-zA-Z0-9]*)\""},
+    "NEO": {"client": neotracker_io_client, "identifier": "address", "expression": r"address=\"([a-zA-Z0-9]*)\""}
+}
 
 
 def get_transaction_collections_from_trade_data(list_of_trades: List[TradeData]):
@@ -145,6 +153,38 @@ def handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange
     return firefly_account_collections, epochs_to_calculate
 
 
+def get_x_pub_of_account(account, expression):
+    try:
+        [result] = re.findall(expression, account.attributes.notes)
+    except:
+        pass
+    return result
+
+
+def handle_unclassified_transactions(trading_platform):
+    # 1. get accounts with xPub in notes and get addresses from xPub
+    account_collections = [
+        firefly_wrapper.create_firefly_account_collection(security, trading_platform)
+        for security in supported_blockchains.keys()
+    ]
+    account_address_mapping = {}
+    for supported_blockchain in supported_blockchains:
+        accounts = firefly_wrapper.get_firefly_accounts_for_crypto_currency(supported_blockchain, supported_blockchains.get(supported_blockchain).get("identifier"))
+        for account in accounts:
+            x_pub_of_account = \
+                get_x_pub_of_account(account, supported_blockchains.get(supported_blockchain).get("expression"))
+            addresses = supported_blockchains\
+                .get(supported_blockchain)\
+                .get("client")\
+                .get_addresses_from_xpub(x_pub=x_pub_of_account)
+            account_address_mapping\
+                .setdefault(account.attributes.name, {"addresses": addresses, "account": account.attributes})
+    # 2. get transactions with crypto-trades-firefly-iii:unclassified-transaction in notes
+    transactions = firefly_wrapper.get_transactions("unclassified-transaction", supported_blockchains)
+    # 3. rewrite transactions in Firefly-III
+    firefly_wrapper.rewrite_unclassified_transactions(transactions, account_address_mapping, account_collections)
+
+
 def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     exchange_interface = exchange_interface_factory.get_specific_exchange_interface(trading_platform)
 
@@ -152,6 +192,7 @@ def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     handle_interests(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_withdrawals(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_deposits(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
+    handle_unclassified_transactions(trading_platform)
 
     return "ok"
 

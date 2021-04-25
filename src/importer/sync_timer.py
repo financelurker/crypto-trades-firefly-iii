@@ -69,4 +69,3 @@ class SyncTimer(object):
         begin_timestamp = int(datetime.datetime.fromisoformat(config.sync_begin_timestamp).timestamp() * 1000)
         sync_logic.interval_processor(begin_timestamp, to_timestamp, True, trading_platform)
         return to_timestamp
-
