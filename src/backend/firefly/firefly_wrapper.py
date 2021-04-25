@@ -71,8 +71,16 @@ def get_withdrawal_unclassified_key(trading_platform):
     return SERVICE_IDENTIFICATION + ":unclassified-transaction:" + trading_platform.lower()
 
 
+def get_withdrawal_classified_key(trading_platform):
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
+
+
 def get_deposit_unclassified_key(trading_platform):
     return SERVICE_IDENTIFICATION + ":unclassified-transaction:" + trading_platform.lower()
+
+
+def get_deposit_classified_key(trading_platform):
+    return SERVICE_IDENTIFICATION + ":" + trading_platform.lower()
 
 
 def connect():
@@ -288,6 +296,15 @@ def write_commission(transaction_collection, trading_platform):
                 print(message)
 
 
+def hash_unclassifiable(amount, date, external_id, trading_platform: str, currency_code: str, tags: List[str]):
+    hashed_result = str(amount) + str(date) + str(external_id) + trading_platform + currency_code
+    for tag in tags:
+        hashed_result += tag
+    hash_object = hashlib.sha256(hashed_result.encode())
+    hex_dig = hash_object.hexdigest()
+    return hex_dig
+
+
 def hash_transaction(amount, date, description, external_id, source_name, destination_name, tags):
     hashed_result = str(amount) + str(date) + description + str(external_id) + source_name + destination_name
     for tag in tags:
@@ -410,8 +427,16 @@ def get_transactions(notes_keyword, supported_blockchains):
     with firefly_iii_client.ApiClient(firefly_config) as api_client:
         transaction_api = firefly_iii_client.TransactionsApi(api_client)
         try:
-            transactions = transaction_api.list_transaction(type="all").data
-
+            transactions = []
+            page = 0
+            load_next = True
+            while load_next:
+                next_transactions = transaction_api.list_transaction(type="all", page=page).data
+                transactions.extend(next_transactions)
+                if len(next_transactions) < 50:
+                    load_next = False
+                else:
+                    page += 1
             for transaction in transactions:
                 for inner_transaction in transaction.attributes.transactions:
                     if inner_transaction.notes is not None and \
@@ -550,7 +575,7 @@ def write_new_withdrawal(withdrawal, account_collection, trading_platform):
             external_id=withdrawal.transaction_id,
             notes=get_withdrawal_unclassified_key(trading_platform)
         )
-        split.import_hash_v2 = hash_transaction(split.amount, split.date, split.description, split.external_id, split.source_name, split.destination_name, split.tags)
+        split.import_hash_v2 = hash_unclassifiable(split.amount, split.date, split.external_id, trading_platform, currency_code, split.tags)
         list_inner_transactions.append(split)
         new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
 
@@ -613,7 +638,7 @@ def write_new_deposit(deposit: DepositData, account_collection, trading_platform
             external_id=deposit.transaction_id,
             notes=get_withdrawal_unclassified_key(trading_platform)
         )
-        split.import_hash_v2 = hash_transaction(split.amount, split.date, split.description, split.external_id, split.source_name, split.destination_name, split.tags)
+        split.import_hash_v2 = hash_unclassifiable(split.amount, split.date, split.external_id, trading_platform, currency_code, split.tags)
         list_inner_transactions.append(split)
         new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
 
@@ -648,7 +673,152 @@ def import_deposits(deposits, firefly_account_collections, trading_platform):
                 write_new_deposit(deposit, account_collection, trading_platform)
 
 
-def rewrite_unclassified_transactions(transactions, account_address_mapping, account_collections):
+def get_relevant_firefly_deposit_account(transaction_data, account_address_mapping):
+    for account_name in account_address_mapping:
+        account_mapping = account_address_mapping.get(account_name)
+        if not account_mapping.get("code") == transaction_data.get("firefly").attributes.transactions[0].currency_code and not account_mapping.get("code") == transaction_data.get("firefly").attributes.transactions[0].currency_symbol:
+            continue
+        for firefly_address in account_mapping.get("addresses"):
+            for ledger_addresses in transaction_data.get("ledger").ins:
+                if firefly_address == ledger_addresses:
+                    return account_mapping
+    return None
+
+
+def get_relevant_firefly_withdrawal_account(transaction_data, account_address_mapping):
+    for account_name in account_address_mapping:
+        account_mapping = account_address_mapping.get(account_name)
+        if not account_mapping.get("code") == transaction_data.get("firefly").attributes.transactions[0].currency_code and not account_mapping.get("code") == transaction_data.get("firefly").attributes.transactions[0].currency_symbol:
+            continue
+        for firefly_address in account_mapping.get("addresses"):
+            for ledger_addresses in transaction_data.get("ledger").outs:
+                if firefly_address == ledger_addresses:
+                    return account_mapping
+    return None
+
+
+def rewrite_unclassified_deposit_transaction(transaction_data, relevant_firefly_account, trading_platform):
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        transaction_api = firefly_iii_client.TransactionsApi(api_client)
+        list_inner_transactions = []
+
+        [inner_transaction] = transaction_data.get("firefly").attributes.transactions
+
+        tags = inner_transaction.tags
+        if config.debug:
+            tags.append('dev')
+        description = trading_platform + " | DEPOSIT | Security: " + transaction_data.get("code")
+
+        split = firefly_iii_client.TransactionSplit(
+            amount=inner_transaction.amount,
+            date=inner_transaction.date,
+            description=description,
+            type='transfer',
+            tags=tags,
+            reconciled=True,
+            source_name=relevant_firefly_account.get("account").name,
+            source_type=relevant_firefly_account.get("account").type,
+            currency_code=inner_transaction.currency_code,
+            currency_symbol=inner_transaction.currency_symbol,
+            destination_name=inner_transaction.destination_name,
+            destination_type=inner_transaction.destination_type,
+            external_id=inner_transaction.external_id,
+            notes=get_withdrawal_classified_key(trading_platform)
+        )
+        split.import_hash_v2 = hash_unclassifiable(float(split.amount), split.date, split.external_id, trading_platform, split.currency_code, split.tags)
+        list_inner_transactions.append(split)
+        new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
+
+        try:
+            if config.debug:
+                print(trading_platform + ':   - Rewriting a deposit.')
+            transaction_api.delete_transaction(transaction_data.get("firefly").id)
+            transaction_api.store_transaction(new_transaction)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate deposit transaction detected. Here\'s the external id: "' + str(
+                    inner_transaction.external_id) + '"')
+            else:
+                message: str = trading_platform + ':   - There was an unknown error rewriting a deposit. Here\'s the external id: "' + str(
+                    inner_transaction.external_id) + '"'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
+        except Exception as e:
+            message: str = trading_platform + ':   - There was an unknown error rewriting a deposit. Here\'s the external id: "' + str(
+                inner_transaction.external_id) + '"'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
+
+
+def rewrite_unclassified_withdrawal_transaction(transaction_data, relevant_firefly_account, trading_platform):
+    with firefly_iii_client.ApiClient(firefly_config) as api_client:
+        transaction_api = firefly_iii_client.TransactionsApi(api_client)
+        list_inner_transactions = []
+
+        [inner_transaction] = transaction_data.get("firefly").attributes.transactions
+
+        tags = inner_transaction.tags
+        if config.debug:
+            tags.append('dev')
+        description = trading_platform + " | WITHDRAWAL | Security: " + transaction_data.get("code")
+
+        split = firefly_iii_client.TransactionSplit(
+            amount=inner_transaction.amount,
+            date=inner_transaction.date,
+            description=description,
+            type='transfer',
+            tags=tags,
+            reconciled=True,
+            source_name=inner_transaction.source_name,
+            source_type=inner_transaction.source_type,
+            currency_code=inner_transaction.currency_code,
+            currency_symbol=inner_transaction.currency_symbol,
+            destination_name=relevant_firefly_account.get("account").name,
+            destination_type=relevant_firefly_account.get("account").type,
+            external_id=inner_transaction.external_id,
+            notes=get_withdrawal_classified_key(trading_platform)
+        )
+        split.import_hash_v2 = hash_unclassifiable(float(split.amount), split.date, split.external_id, trading_platform, split.currency_code, split.tags)
+        list_inner_transactions.append(split)
+        new_transaction = firefly_iii_client.Transaction(apply_rules=False, transactions=list_inner_transactions, error_if_duplicate_hash=True)
+
+        try:
+            if config.debug:
+                print(trading_platform + ':   - Rewriting a withdrawal.')
+            transaction_api.delete_transaction(transaction_data.get("firefly").id)
+            transaction_api.store_transaction(new_transaction)
+        except ApiException as e:
+            if e.status == 422 and "Duplicate of transaction" in e.body:
+                print(trading_platform + ':   - Duplicate withdrawal transaction detected. Here\'s the external id: "' + str(
+                    inner_transaction.external_id) + '"')
+            else:
+                message: str = trading_platform + ':   - There was an unknown error rewriting a withdrawal. Here\'s the external id: "' + str(
+                    inner_transaction.external_id) + '"'
+                if config.debug:
+                    print(message % e)
+                else:
+                    print(message)
+        except Exception as e:
+            message: str = trading_platform + ':   - There was an unknown error rewriting a withdrawal. Here\'s the external id: "' + str(
+                inner_transaction.external_id) + '"'
+            if config.debug:
+                print(message % e)
+            else:
+                print(message)
+
+
+def rewrite_unclassified_transactions(transactions, account_address_mapping, account_collections, trading_platform):
+    print("Rewriting " + str(len(transactions)) + " deposits/withdrawals.")
     for transaction in transactions:
-        pass
-    pass
+        transaction_data = transactions.get(transaction)
+        [inner_transaction] = transaction_data.get("firefly").attributes.transactions
+        if trading_platform + " | DEPOSIT (unclassified) | Security: " in inner_transaction.description:
+            relevant_firefly_account = get_relevant_firefly_deposit_account(transaction_data, account_address_mapping)
+            rewrite_unclassified_deposit_transaction(transaction_data, relevant_firefly_account, trading_platform)
+        elif trading_platform + " | WITHDRAWAL (unclassified) | Security: " in inner_transaction.description:
+            relevant_firefly_account = get_relevant_firefly_withdrawal_account(transaction_data, account_address_mapping)
+            rewrite_unclassified_withdrawal_transaction(transaction_data, relevant_firefly_account, trading_platform)

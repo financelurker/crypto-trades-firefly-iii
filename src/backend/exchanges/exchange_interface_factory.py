@@ -1,5 +1,5 @@
-import exchanges.impls as impls
-from exchanges.exchange_interface import AbstractCryptoExchangeClient
+import backend.exchanges.impls as impls
+from backend.exchanges.exchange_interface import AbstractCryptoExchangeClient
 
 
 def get_available_exchanges():

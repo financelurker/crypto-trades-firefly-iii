@@ -1,7 +1,7 @@
 import config as config
 import datetime
 import importer.sync_logic as sync_logic
-from exchanges.exchange_interface import ExchangeUnderMaintenanceException
+from backend.exchanges.exchange_interface import ExchangeUnderMaintenanceException
 
 
 class SyncTimer(object):

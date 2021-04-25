@@ -1,11 +1,10 @@
-from inspect import isclass
 from pkgutil import iter_modules
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
 # iterate through the modules in the current package
-from exchanges.exchange_interface import AbstractCryptoExchangeClientModule
+from backend.exchanges.exchange_interface import AbstractCryptoExchangeClientModule
 
 list_of_impl_meta_class_instances: List[AbstractCryptoExchangeClientModule] = []
 list_of_impl_meta_class_names = []

@@ -1,8 +1,6 @@
 import os
 
-from cryptocom.exchange import ApiError
-
-from exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
+from backend.exchanges.exchange_interface import AbstractCryptoExchangeClient, AbstractCryptoExchangeClientModule
 from model.savings import InterestData
 from model.transaction import TradeData, TradingPair
 from typing import List, Dict

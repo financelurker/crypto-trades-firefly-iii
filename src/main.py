@@ -1,9 +1,9 @@
 import time
 from threading import Thread
-import exchanges.impls as impls
+import backend.exchanges.impls as impls
 
 import config
-from backend import firefly_wrapper
+from backend.firefly import firefly_wrapper
 import migrate_firefly_identifiers
 from importer.sync_timer import SyncTimer
 

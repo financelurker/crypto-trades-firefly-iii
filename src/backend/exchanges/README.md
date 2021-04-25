@@ -5,12 +5,12 @@ Perfect.
 
 ## Overview
 
-[Big Picture](../../plantuml/overview.svg)
+[Big Picture](../../../plantuml/overview.svg)
 <img src="../../plantuml/overview.svg">
 
 ## Implementation
 
-To add a new exchange as data source you need to implement two classes which super classes are [declared in here](./exchange_interface.py):
+To add a new exchange as data source you need to implement two classes which super classes are [declared in here](exchange_interface.py):
 - **AbstractCryptoExchangeClientModule** which is the meta class for your exchange module. It defines meta information and access to the client implementation
   - **is_enabled(self) -> bool**
     - Checks the environmental variables which are needed to run this exchange plugin.
@@ -48,7 +48,7 @@ To add a new exchange as data source you need to implement two classes which sup
       - **to_timestamp: int:** a timestamp in milli-seconds to where deposits should be considered for import
       - **list_of_assets: List[str]:** a list of assets where there are eligible asset accounts within Firefly-III and deposits can be imported to. Example: ["BTC", "ETH", "EUR", "USD"]
 
-When you have those classes implemented add your module (*.py file) to [the impl package](./impls). Implementations of AbstractCryptoExchangeClientModule in that package will be picked up automatically during initialization phase of the service.
+When you have those classes implemented add your module (*.py file) to [the impl package](impls). Implementations of AbstractCryptoExchangeClientModule in that package will be picked up automatically during initialization phase of the service.
 
 If you want your exchange implementation added to this repository, just create a pull request with your exchange implementation. When you add the needed environmental variables declared by your exchange plugin the service will automatically connect to that exchange and import data.
 

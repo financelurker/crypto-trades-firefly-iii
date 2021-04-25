@@ -1,6 +1,6 @@
 import firefly_iii_client
 import config
-from backend import firefly_wrapper
+from backend.firefly import firefly_wrapper
 
 LEGACY_ASSET_ACCOUNT_IDENTIFIER_v1 = "py1binance2firefly3:binance-fund"
 LEGACY_REVENUE_ACCOUNT_IDENTIFIER_v1 = "py1binance2firefly3:binance-interest"
