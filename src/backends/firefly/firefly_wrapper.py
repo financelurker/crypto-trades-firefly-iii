@@ -441,8 +441,8 @@ def get_transactions(notes_keyword, supported_blockchains):
                 for inner_transaction in transaction.attributes.transactions:
                     if inner_transaction.notes is not None and \
                             notes_keyword in inner_transaction.notes and \
-                            (any(inner_transaction.currency_code in s for s in supported_blockchains) or
-                             any(inner_transaction.currency_symbol in s for s in supported_blockchains)):
+                            (any(inner_transaction.currency_code == supported_blockchains.get(s).get_currency_code() for s in supported_blockchains) or
+                             any(inner_transaction.currency_symbol == supported_blockchains.get(s).get_currency_code() for s in supported_blockchains)):
                         result.append(transaction)
                         break
         except Exception as e:

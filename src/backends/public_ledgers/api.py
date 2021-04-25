@@ -1,4 +1,5 @@
 import abc
+from typing import List
 
 from model.ledger_transaction import LedgerTransaction
 
@@ -21,7 +22,7 @@ class SupportedBlockchainExplorer(metaclass=abc.ABCMeta):
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_tx_addresses_from_address(self, address: str, timeout=25):
+    def get_tx_addresses_from_address(self, address: str, timeout=25) -> List[str]:
         raise NotImplementedError
 
     @abc.abstractmethod

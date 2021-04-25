@@ -158,36 +158,37 @@ def get_x_pub_of_account(account, expression):
 def get_transactions_from_blockchain(firefly_transactions, supported_blockchains):
     result = {}
     for supported_blockchain in supported_blockchains:
-        client = supported_blockchains.get(supported_blockchain).get("client")
+        client = supported_blockchains.get(supported_blockchain)
         for firefly_transaction in firefly_transactions:
             [inner_transaction] = firefly_transaction.attributes.transactions
-            if inner_transaction.currency_code == supported_blockchain or inner_transaction.currency_symbol == supported_blockchain:
+            if inner_transaction.currency_code == client.get_currency_code() or inner_transaction.currency_symbol == client.get_currency_code():
                 ledger_transaction = client.get_transaction_from_ledger(inner_transaction.external_id)
-                result.setdefault(inner_transaction.external_id, {"firefly": firefly_transaction, "ledger": ledger_transaction, "code": supported_blockchain})
+                result.setdefault(inner_transaction.external_id, {"firefly": firefly_transaction, "ledger": ledger_transaction, "code": client.get_currency_code()})
     return result
 
 
 def handle_unclassified_transactions(trading_platform):
     # 1. get accounts with xPub in notes and get addresses from xPub
-    supported_blockchain = {}
+    supported_blockchains = {}
     for explorer_module in available_explorer:
-        supported_blockchain.setdefault(explorer_module.get_blockchain_name(), explorer_module.get_blockchain_explorer())
+        supported_blockchains.setdefault(explorer_module.get_blockchain_name(), explorer_module.get_blockchain_explorer())
     account_collections = [
         firefly_wrapper.create_firefly_account_collection(security, trading_platform)
         for security in supported_blockchains.keys()
     ]
     account_address_mapping = {}
     for supported_blockchain in supported_blockchains:
-        accounts = firefly_wrapper.get_firefly_accounts_for_crypto_currency(supported_blockchain, supported_blockchains.get(supported_blockchain).get("identifier"))
+        explorer = supported_blockchains.get(supported_blockchain)
+        identifier = explorer.get_address_identifier()
+        regular_expression = explorer.get_address_re()
+        accounts = firefly_wrapper.get_firefly_accounts_for_crypto_currency(explorer.get_currency_code(), identifier)
         for account in accounts:
             x_pub_of_account = \
-                get_x_pub_of_account(account, supported_blockchains.get(supported_blockchain).get("expression"))
-            addresses = supported_blockchains\
-                .get(supported_blockchain)\
-                .get("client")\
-                .get_addresses_from_xpub(x_pub=x_pub_of_account)
+                get_x_pub_of_account(account, regular_expression)
+            addresses = explorer\
+                .get_tx_addresses_from_address(address=x_pub_of_account)
             account_address_mapping\
-                .setdefault(account.attributes.name, {"addresses": addresses, "account": account.attributes, "code": supported_blockchain})
+                .setdefault(account.attributes.name, {"addresses": addresses, "account": account.attributes, "code": explorer.get_currency_code()})
     # 2. get transactions with crypto-trades-firefly-iii:unclassified-transaction in notes
     firefly_transactions = firefly_wrapper.get_transactions("unclassified-transaction", supported_blockchains)
     transactions = get_transactions_from_blockchain(firefly_transactions, supported_blockchains)
@@ -198,11 +199,11 @@ def handle_unclassified_transactions(trading_platform):
 def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     exchange_interface = exchange_interface_factory.get_specific_exchange_interface(trading_platform)
 
+    handle_unclassified_transactions(trading_platform)
     firefly_account_collections, epochs_to_calculate = handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange_interface)
     handle_interests(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_withdrawals(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_deposits(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
-    handle_unclassified_transactions(trading_platform)
 
     return "ok"
 
