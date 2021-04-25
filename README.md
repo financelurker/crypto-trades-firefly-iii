@@ -38,6 +38,9 @@ The following movements on your crypto trading platform account will be imported
 ## Supported crypto trading platform / exchanges for trades
 - Binance (formerly known as [binance-firefly-iii](https://github.com/financelurker/binance-firefly-iii))
   - "notes identifier": "crypto-trades-firefly-iii:binance"
+  - Environmental Variables
+    - BINANCE_API_KEY
+    - BINANCE_API_SECRET
 
 In the doing:
 - Kraken
