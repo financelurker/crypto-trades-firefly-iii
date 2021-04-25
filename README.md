@@ -122,6 +122,12 @@ If you are having any troubles, make sure you're using **python 3.9** (the corre
 
 ## Configuration
 
+### Multiple Exchanges
+
+As the whole functionality runs in a single blocking thread for all configured exchanges it is recommended to configure a new instance/docker container for each crypto exchange you're using. Otherwise the maintenance of one exchange will impact the import of all other exchanges as well.
+
+### Environmental Variables
+
 This image is configured via **environmental variables**. As there are many ways to set them up for your runtime environment please consult that documentation.
 
 Make sure you have them set as there is no exception handling for missing values from the environment.
