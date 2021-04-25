@@ -20,7 +20,7 @@ The following movements on your crypto trading platform account will be imported
   - Only 500 transactions will be imported for each trading pair. (I'll fix that in the future with a more sophisticated import query with the Binance API)
   - Rate limiting: if you run this app in debug mode the Binance API will be polled every 10 seconds. You'll probably get blocked sometime from further API calls. Make sure that you're using Binance testnet when running this in debug-mode to not interfer with your IP rates at Binance (or you know what you're doing).
 
-### Interest through savings (lending/staking)
+### Received interest through savings (lending/staking)
 
 - Received interest will be imported automatically
   - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
