@@ -174,7 +174,7 @@ Make sure you have them set as there is no exception handling for missing values
 
 # How to add exchanges
 
-Please see the documentation on [how to extend this service](./src/exchanges/README.md).
+Please see the documentation on [how to extend this service](./src/exchanges).
 
 # Disclaimer
 This app needs access tokens for your Firefly III instance, and access tokens/API-Keys for your crypto trading platform account. It is absolutely okay to only give read-permissions to that access tokens/API-Keys, as there will be no writing actions to crypto trading platform by this service.

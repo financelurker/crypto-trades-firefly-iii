@@ -20,11 +20,21 @@ To add a new exchange as data source you need to implement two classes which sup
     - Creates and returns an instance of the appropriate AbstractCryptoExchangeClient sub-class.
 - **AbstractCryptoExchangeClient** is the specific implementation class for the exchange API which provides
   - **get_trading_pairs(self, list_of_symbols_and_codes: List[str]) -> List[TradingPair]**
-    - Checks all eligible products on the exchange and matches them with the list of potential trading-pairs your Firefly-III accounts support.
+    - Description: Checks all eligible trading products on the exchange and matches them with the list of currency symbols and codes your Firefly-III accounts support and has asset accounts already set up.
+    - Parameters:
+      - **list_of_symbols_and_codes: List[str]:** This parameter contains a list of all currency symbols and codes from eligible Firefly-III accounts. Example: ["BTC", "₿", "ETH", "Ξ", "EUR", "€", "USD", "$"]
   - **get_trades(self, from_timestamp: int, to_timestamp: int, list_of_trading_pairs: List[TradingPair]) -> List[TradeData]**
-    - Gets and returns all trades of the account (for a given time period).
+    - Description: Gets and returns all trades of the account (for a given time period).
+    - Parameters:
+      - **from_timestamp: int:** a timestamp in milli-seconds from where trades should be considered for import
+      - **to_timestamp: int:** a timestamp in milli-seconds to where trades should be considered for import
+      - **list_of_trading_pairs: List[TradingPair]:** The trading pairs for which the exchange has eligible products. This is the response from the get_trading_pairs call.
   - **get_savings_interests(self, from_timestamp: int, to_timestamp: int, list_of_assets: List[str]) -> List[InterestData]**
-    - a method to get all received interest (for a given time period)
+    - Description: a method to get all received interest (for a given time period)
+    - Parameters:
+      - **from_timestamp: int:** a timestamp in milli-seconds from where received interest should be considered for import
+      - **to_timestamp: int:** a timestamp in milli-seconds to where received interest should be considered for import
+      - **list_of_assets: List[str]:** a list of assets where there are eligible asset accounts within Firefly-III and received interest can be imported to. Example: ["BTC", "ETH", "EUR", "USD"]
 
 When you have those classes implemented add your module (*.py file) to [the impl package](./impls). Implementations of AbstractCryptoExchangeClientModule in that package will be picked up automatically during initialization phase of the service.
 
