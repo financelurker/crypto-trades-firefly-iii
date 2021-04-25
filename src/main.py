@@ -66,26 +66,4 @@ def worker(meta_class_instances):
             exchange.get('timer_object').sync(trading_platform)
 
 
-class MyThread(Thread):
-    def __init__(self, event, trading_platform, timer_object):
-        Thread.__init__(self)
-        self.stopped = event
-        self.trading_platform = trading_platform
-        self.timer_object = timer_object
-
-    def run(self):
-        interval_seconds = 0
-        if config.sync_inverval == 'hourly':
-            interval_seconds = 3600
-        elif config.sync_inverval == 'daily':
-            interval_seconds = 3600 * 24
-        elif config.sync_inverval == 'debug':
-            interval_seconds = 10
-        else:
-            print("The configured interval is not supported. Use 'hourly' or 'daily' within your config.")
-            exit(-749)
-        while not self.stopped.wait(interval_seconds):
-            self.timer_object.sync(self.trading_platform)
-
-
 start()
