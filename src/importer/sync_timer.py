@@ -15,7 +15,7 @@ class SyncTimer(object):
             self.last_sync_interval_begin_timestamp = self.import_all_from_exchange(begin_of_sync_timestamp,
                                                                                     trading_platform)
         except ExchangeUnderMaintenanceException as maintenance:
-            print("Exchange under maintenance. Delaying import of all trades.")
+            print(trading_platform + ": Exchange under maintenance. Delaying import of all movements.")
             self.last_sync_interval_begin_timestamp = datetime.datetime.fromisoformat(begin_of_sync_timestamp)\
                                                           .timestamp() * 1000
         self.last_sync_result = 'ok'
@@ -45,7 +45,7 @@ class SyncTimer(object):
             self.last_sync_result = sync_logic.interval_processor(previous_last_sync_interval_begin_timestamp, new_to_timestamp_in_millis, False, trading_platform)
             self.last_sync_interval_begin_timestamp = new_to_timestamp_in_millis
         except ExchangeUnderMaintenanceException as maintenance:
-            print("Exchange under maintenance. Skipping interval processing.")
+            print(trading_platform + ": Exchange under maintenance. Delaying import of movements.")
 
     def get_last_interval_begin_millis(self, interval, current_datetime):
         if interval == 'hourly':
