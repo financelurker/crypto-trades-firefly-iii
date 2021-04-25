@@ -36,4 +36,4 @@ Pull requests containing writing actions to the exchange will probably be reject
 
 ### Exchange services under maintenance
 
-For the case being that the configured crypto exchange is under maintenance you can catch that Exception and throw a **ExchangeUnderMaintenanceException** instead. This ensures that the synchronization will be delayed until the service is operational again.
+For the case being that the configured crypto exchange is under maintenance you can catch that Exception and throw a **ExchangeUnderMaintenanceException** instead. This ensures that the imports will be delayed until the services are operational again.
