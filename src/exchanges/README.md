@@ -31,3 +31,9 @@ When you have those classes implemented add your module (*.py file) to [the impl
 If you want your exchange implementation added to this repository, just create a pull request with your exchange implementation. When you add the needed environmental variables declared by your exchange plugin the service will automatically connect to that exchange and import data.
 
 Pull requests containing writing actions to the exchange will probably be rejected - as all exchange interactions have to be of read nature.
+
+## Exceptions and Exchange Outages
+
+### Exchange services under maintenance
+
+For the case being that the configured crypto exchange is under maintenance you can catch that Exception and throw a **ExchangeUnderMaintenanceException** instead. This ensures that the synchronization will be delayed until the service is operational again.
