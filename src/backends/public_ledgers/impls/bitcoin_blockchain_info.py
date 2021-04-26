@@ -29,7 +29,7 @@ class BitcoinModule(SupportedBlockchainModule):
         return True
 
     @staticmethod
-    def get_instance(cls):
+    def get_instance():
         return BitcoinModule()
 
 
