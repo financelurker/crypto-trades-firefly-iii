@@ -38,20 +38,20 @@ class BinanceConfig(Dict):
 @AbstractCryptoExchangeClientModule.register
 class BinanceClientModule(AbstractCryptoExchangeClientModule):
 
-    @staticmethod
-    def get_instance():
-        return BinanceClientModule()
-
-    def get_exchange_client(self) -> AbstractCryptoExchangeClient:
-        return BinanceClient()
-
-    def get_exchange_name(self) -> str:
-        return exchange_name
-
     def is_enabled(self) -> bool:
         config = BinanceConfig()
         config.init()
         return config.enabled
+
+    def get_exchange_name(self) -> str:
+        return exchange_name
+
+    def get_exchange_client(self) -> AbstractCryptoExchangeClient:
+        return BinanceClient()
+
+    @staticmethod
+    def get_instance():
+        return BinanceClientModule()
 
 
 def get_interest_data_from_binance_data(binance_data, type, due) -> InterestData:

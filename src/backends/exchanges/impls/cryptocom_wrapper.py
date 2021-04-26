@@ -28,20 +28,20 @@ class CryptoComConfig(Dict):
 @AbstractCryptoExchangeClientModule.register
 class CryptoComClientModule(AbstractCryptoExchangeClientModule):
 
-    @staticmethod
-    def get_instance():
-        return CryptoComClientModule()
-
-    def get_exchange_client(self) -> AbstractCryptoExchangeClient:
-        return CryptoComClient()
-
-    def get_exchange_name(self) -> str:
-        return exchange_name
-
     def is_enabled(self) -> bool:
         config = CryptoComConfig()
         config.init()
         return config.enabled
+
+    def get_exchange_name(self) -> str:
+        return exchange_name
+
+    def get_exchange_client(self) -> AbstractCryptoExchangeClient:
+        return CryptoComClient()
+
+    @staticmethod
+    def get_instance() -> AbstractCryptoExchangeClientModule:
+        return CryptoComClientModule()
 
 @AbstractCryptoExchangeClient.register
 class CryptoComClient(AbstractCryptoExchangeClient):
