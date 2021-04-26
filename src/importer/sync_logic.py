@@ -199,11 +199,11 @@ def handle_unclassified_transactions(trading_platform):
 def interval_processor(from_timestamp, to_timestamp, init, trading_platform):
     exchange_interface = exchange_interface_factory.get_specific_exchange_interface(trading_platform)
 
-    handle_unclassified_transactions(trading_platform)
     firefly_account_collections, epochs_to_calculate = handle_trades(from_timestamp, to_timestamp, init, trading_platform, exchange_interface)
     handle_interests(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_withdrawals(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
     handle_deposits(from_timestamp, to_timestamp, init, trading_platform, exchange_interface, firefly_account_collections, epochs_to_calculate)
+    handle_unclassified_transactions(trading_platform)
 
     return "ok"
 
