@@ -2,6 +2,11 @@
 
 This service lets you import your movements on supported crypto trading platforms to your Firefly III account. Keep an overview of your traded crypto assets.
 
+## Overview
+
+[Big Picture](plantuml/overview.svg)
+<img src="plantuml/overview.svg">
+
 ## Imported Movements from Crypto Trading Platform to Firefly III
 
 The following movements on your crypto trading platform account will be imported to your Firefly III instance:

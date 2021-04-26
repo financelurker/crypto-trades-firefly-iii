@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="191px" preserveAspectRatio="none" style="width:779px;height:191px;" version="1.1" viewBox="0 0 779 191" width="779px" zoomAndPan="magnify"><defs><filter height="300%" id="f1narci6a2i6xf" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><!--MD5=[38bfa9dc6018363cafe15f923a4b8db9]
+entity service--><rect fill="#90EE90" filter="url(#f1narci6a2i6xf)" height="46.2969" style="stroke:#A80036;stroke-width:1.5;" width="207" x="158" y="7"/><rect fill="#90EE90" height="10" style="stroke:#A80036;stroke-width:1.5;" width="15" x="345" y="12"/><rect fill="#90EE90" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="343" y="14"/><rect fill="#90EE90" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="343" y="18"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="167" x="173" y="39.9951">crypto-trades-firefly-iii</text><!--MD5=[4d773f5f90d2f02375caa9cfca8009fa]
+entity ff--><rect fill="#FEFECE" filter="url(#f1narci6a2i6xf)" height="46.2969" style="stroke:#A80036;stroke-width:1.5;" width="101" x="116" y="130"/><rect fill="#FEFECE" height="10" style="stroke:#A80036;stroke-width:1.5;" width="15" x="197" y="135"/><rect fill="#FEFECE" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="195" y="137"/><rect fill="#FEFECE" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="195" y="141"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="61" x="131" y="162.9951">Firefly III</text><!--MD5=[83a7948da0bc784d788223921e792ecb]
+entity ffrest--><ellipse cx="71.5" cy="153" fill="#FEFECE" filter="url(#f1narci6a2i6xf)" rx="8" ry="8" style="stroke:#A80036;stroke-width:1.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="131" x="6" y="182.9951">Firefly III REST-API</text><!--MD5=[64d09da345404a34783d16a07d117f97]
+entity exchange--><rect fill="#FEFECE" filter="url(#f1narci6a2i6xf)" height="46.2969" style="stroke:#A80036;stroke-width:1.5;" width="228" x="305.5" y="130"/><rect fill="#FEFECE" height="10" style="stroke:#A80036;stroke-width:1.5;" width="15" x="513.5" y="135"/><rect fill="#FEFECE" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="511.5" y="137"/><rect fill="#FEFECE" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="511.5" y="141"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="188" x="320.5" y="162.9951">Crypto Trading Exchanges</text><!--MD5=[14ffa96c545377284cf9704729aa6ac3]
+entity exchangerest--><ellipse cx="261.5" cy="153" fill="#FEFECE" filter="url(#f1narci6a2i6xf)" rx="8" ry="8" style="stroke:#A80036;stroke-width:1.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="139" x="192" y="182.9951">Exchange REST-API</text><!--MD5=[43d0eb486ab8276ac19d3a17de2ccef6]
+entity ledger--><rect fill="#FEFECE" filter="url(#f1narci6a2i6xf)" height="46.2969" style="stroke:#A80036;stroke-width:1.5;" width="144" x="621.5" y="130"/><rect fill="#FEFECE" height="10" style="stroke:#A80036;stroke-width:1.5;" width="15" x="745.5" y="135"/><rect fill="#FEFECE" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="743.5" y="137"/><rect fill="#FEFECE" height="2" style="stroke:#A80036;stroke-width:1.5;" width="4" x="743.5" y="141"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="104" x="636.5" y="162.9951">Public Ledgers</text><!--MD5=[0244aeef9e1a5f254aae65b6ead4f7ee]
+entity explorer--><ellipse cx="577.5" cy="153" fill="#FEFECE" filter="url(#f1narci6a2i6xf)" rx="8" ry="8" style="stroke:#A80036;stroke-width:1.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="101" x="527" y="182.9951">BlockExplorer</text><!--MD5=[6ee939b856335c4f5fc2baf6ac77a088]
+link ffrest to ff--><path d="M80.7773,153 C92.4972,153 104.2171,153 115.937,153 " fill="none" id="ffrest-ff" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[178d82f69fff7b26b681a0fe255e2992]
+link exchangerest to exchange--><path d="M270.758,153 C282.281,153 293.805,153 305.329,153 " fill="none" id="exchangerest-exchange" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[3e74a389b48a6e4c56096daa920e6d79]
+link explorer to ledger--><path d="M586.562,153 C598.12,153 609.677,153 621.234,153 " fill="none" id="explorer-ledger" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[60e8f51df613506e8225f652ff7d1a4c]
+link service to ffrest--><path d="M221.672,53.131 C188.059,72.29 139.0709,101.3557 98.5,130 C93.9063,133.2433 89.0869,137.0336 84.8121,140.5454 " fill="none" id="service-to-ffrest" style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#A80036" points="80.7473,143.9337,90.2216,141.2433,84.5879,140.7321,85.0991,135.0984,80.7473,143.9337" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="170.5" y="96.0669">use</text><!--MD5=[a4e85150e8feb7bb5d54cde44348f60a]
+link service to exchangerest--><path d="M261.5,53.193 C261.5,78.245 261.5,118.1829 261.5,138.7707 " fill="none" id="service-to-exchangerest" style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#A80036" points="261.5,143.802,265.5,134.802,261.5,138.802,257.5,134.802,261.5,143.802" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="262.5" y="96.0669">use</text><!--MD5=[05bd69dd9859d83aa85e0db4a5a331a6]
+link service to explorer--><path d="M354.056,53.073 C412.931,69.373 489.48,94.8499 551.5,130 C556.438,132.7989 561.329,136.5924 565.514,140.2409 " fill="none" id="service-to-explorer" style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#A80036" points="569.438,143.7989,565.4573,134.7904,565.7338,140.4404,560.0838,140.717,569.438,143.7989" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="484.5" y="96.0669">use</text><!--MD5=[d3a257b9cabe5766c174c0f279fd00d4]
+@startuml
+[crypto-trades-firefly-iii] as service #Lightgreen
+
+[Firefly III] as ff
+interface "Firefly III REST-API" as ffrest
+ffrest - ff
+
+component "Crypto Trading Exchanges" as exchange
+interface "Exchange REST-API" as exchangerest
+exchangerest - exchange
+
+component "Public Ledgers" as ledger
+interface BlockExplorer as explorer
+explorer - ledger
+
+service ..> ffrest : use
+service ..> exchangerest : use
+service ..> explorer : use
+@enduml
+
+PlantUML version 1.2021.5beta3(Unknown compile time)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
