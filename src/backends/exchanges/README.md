@@ -1,14 +1,35 @@
-# How to add supported exchanges
+# Supported Exchanges
 
 So you know the API of your exchange and are interested in extending this service to work with a new exchange which isn't supported by now?
-Perfect.
+This documentation gives you all you need to know to add another supported exchange to the library.
 
-## Overview
+## How to use supported exchanges
+- Binance (formerly known as [binance-firefly-iii](https://github.com/financelurker/binance-firefly-iii))
+  - "notes identifier": "crypto-trades-firefly-iii:binance"
+  - Environmental Variables
+    - BINANCE_API_KEY
+    - BINANCE_API_SECRET
 
-[Big Picture](../../../plantuml/overview.svg)
-<img src="../../plantuml/overview.svg">
+In the doing:
+- Kraken
+- coinbase
+- KuCoin
+- bitpanda
+- bitfinex
+- HitBTC
+- Crypto.com
+- Nexo
+- PayPal
+- ...
 
-## Implementation
+## How to add supported exchanges
+
+### Overview
+
+[Big Picture](../../../plantuml/exchanges_overview.svg)
+<img src="../../plantuml/exchanges_overview.svg">
+
+### Implementation
 
 To add a new exchange as data source you need to implement two classes which super classes are [declared in here](exchange_interface.py):
 - **AbstractCryptoExchangeClientModule** which is the meta class for your exchange module. It defines meta information and access to the client implementation
@@ -54,8 +75,8 @@ If you want your exchange implementation added to this repository, just create a
 
 Pull requests containing writing actions to the exchange will probably be rejected - as all exchange interactions have to be of read nature.
 
-## Exceptions and Exchange Outages
+### Exceptions and Exchange Outages
 
-### Exchange services under maintenance
+#### Exchange services under maintenance
 
 For the case being that the configured crypto exchange is under maintenance you can catch that Exception and throw a **ExchangeUnderMaintenanceException** instead. This ensures that the imports will be delayed until the services are operational again.

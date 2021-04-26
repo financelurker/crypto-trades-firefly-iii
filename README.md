@@ -28,13 +28,18 @@ The following movements on your crypto trading platform account will be imported
 - _**Known limitations for Binance:**_
   - As of now the Binance API doesn't report interest received through staking, only received interest from lending can be imported.
 
-### Withdrawals and deposits
+### Withdrawals and deposits in crypto
 
 - Import withdrawals and deposits from/to the exchange automatically
   - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
   - transactions get a note "crypto-trades-firefly-iii:unclassified-transaction:<crypto exchange>" (e.g. "crypto-trades-firefly-iii:binance")
-- _**Known limitations**_
-  - As of now these transactions are unclassified, as there is no logic of matching other asset accounts with public ledger transactions.
+- For supported Blockchains you can make those unclassified transactions "regular" classified transactions (which means, deposits don't come in as revenue or withdrawals as withdrawals to expense accounts, instead they are created as "transfer" transactions accordingly to the relevant asset account). See here on [how to use supported blockchains](src/backends/public_ledgers) with this service.
+  - _**Known limitations for not supported Blockchains**_
+    - As of now these transactions are unclassified, as there is no logic of matching other asset accounts with public ledger transactions.
+
+### On-/Off-ramping from or to SEPA asset accounts
+
+- on the roadmap
 
 ### ToDos per Crypto Trade Platform
 
@@ -43,28 +48,9 @@ The following movements on your crypto trading platform account will be imported
   - Received Interest vía lending or staking
   - On-/Off-ramping from or to SEPA asset account (via IBAN-matching)
 
-## Supported crypto trading platform / exchanges for trades
-- Binance (formerly known as [binance-firefly-iii](https://github.com/financelurker/binance-firefly-iii))
-  - "notes identifier": "crypto-trades-firefly-iii:binance"
-  - Environmental Variables
-    - BINANCE_API_KEY
-    - BINANCE_API_SECRET
-
-In the doing:
-- Kraken
-- coinbase
-- KuCoin
-- bitpanda
-- bitfinex
-- HitBTC
-- Crypto.com
-- Nexo
-- PayPal
-- ...
+# How to Use
 
 This module runs stateless next to your Firefly III instance (as Docker container or standalone) and periodically processes new data from your configured crypto trading platform. Just spin it up and watch your trades being imported right away.
-
-# How to Use
 
 ## If you have used binance-firefly-iii before
 
@@ -73,7 +59,7 @@ binance-firefly-iii will not find any accounts within Firefly-III afterwards.
 
 _"notes identifier" are used so that crypto-trades-firefly-iii services can find and match your correct exchange accounts._
 
-## Prepare your Firefly III instance
+## Prepare your Firefly III instance for supported exchanges
 
 To import your movements from Binance your Firefly III installation has to be extended as follows:
 
@@ -87,12 +73,8 @@ To import your movements from Binance your Firefly III installation has to be ex
   - revenue accounts
     - add one account for all expenses on that exchange
   - for all accounts you create
-    - set the "notes identifier" in the notes field - see [supported exchanges](README.md#supported-crypto-trading-platform--exchanges-for-trades) for what "notes identifier" to use
-
-## Working environments
-
-- Firefly III Version 5.4.6
-- Binance API Change Log up to 2021-04-08
+    - set the "notes identifier" in the notes field - see [supported exchanges](src/backends/exchanges/README.md#how-to-use-supported-exchanges) for what "notes identifier" to use
+  - for holdings outside your exchange where you deposit from or withdraw to you can configure [supported blockchains](src/backends/public_ledgers#how-to-use) to map transactions as transfers and not just deposits (by revenue) or withdrawals (to expenses).
 
 ## Run as Docker container from Docker Hub
 
@@ -131,6 +113,11 @@ python main.py
 
 If you are having any troubles, make sure you're using **python 3.9** (the corresponding Docker image is **"python:3.9-slim-buster"** for version referencing).
 
+## Working environments
+
+- Firefly III Version 5.4.6
+- Binance API Change Log up to 2021-04-08
+
 ## Configuration
 
 ### Multiple Exchanges
@@ -154,18 +141,6 @@ Make sure you have them set as there is no exception handling for missing values
 - **FIREFLY_ACCESS_TOKEN**
   - Description: Your access token you have created within your Firefly III instance.
   - Type: string
-- **BINANCE_API_KEY**
-  - Description: The api key of your binance account. It is highly recommended creating a dedicated api key with only read permissions on your Binance account.
-  - Type: string
-- **BINANCE_API_SECRET**
-  - Description: The api secret of that api key.
-  - Type: string
-- **CRYPTOCOM_API_KEY**
-  - Description: **This config key has no impact for now.** The api key of your Crypto.com Exchange account. It is highly recommended creating a dedicated api key with only read permissions on your Crypto.com Exchange account.
-  - Type: string
-- **CRYPTOCOM_API_SECRET**
-  - Description: **This config key has no impact for now.** The api secret of that api key.
-  - Type: string
 - **SYNC_BEGIN_TIMESTAMP**
   - Description: The date of the transactions must not be older than this timestamp to be imported. This helps you to import from back to 2017 initially and once you have imported them all you can set the date to a date near the container runtime start to reduce probable bandwidth-costs on exchange-side. (e.g. "2018-01-22") as these APIs often work with rate-limiting.
   - Type: date [ yyyy-MM-dd ]
@@ -179,6 +154,8 @@ Make sure you have them set as there is no exception handling for missing values
   - Type: boolean [ any ]
   - Optional
   - Default: false
+  
+For the configuration of relevant supported exchanges please [read here](src/backends/exchanges/README.md#how-to-use-supported-exchanges)
 
 # How to extend this service
 
