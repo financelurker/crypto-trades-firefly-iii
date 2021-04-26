@@ -44,7 +44,7 @@ This documentation gives you all you need to know to add another supported excha
 ### Overview
 
 [Big Picture](../../../plantuml/ledger_overview.svg)
-<img src="../../plantuml/ledger_overview.svg">
+<img src="../../../plantuml/ledger_overview.svg">
 
 ### Implementation
 

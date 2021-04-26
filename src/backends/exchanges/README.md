@@ -33,7 +33,7 @@ This documentation gives you all you need to know to add another supported excha
 ### Overview
 
 [Big Picture](../../../plantuml/exchanges_overview.svg)
-<img src="../../plantuml/exchanges_overview.svg">
+<img src="../../../plantuml/exchanges_overview.svg">
 
 ### Implementation
 
