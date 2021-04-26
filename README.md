@@ -16,17 +16,12 @@ The following movements on your crypto trading platform account will be imported
   - For each trade on your crypto trading platform there is a paid commission. For this paid commission an additional transaction is created, linking the asset account holding the commission currency, and the crypto trading platform expense account.
   - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
   - transactions get a note "crypto-trades-firefly-iii:<crypto exchange>" (e.g. "crypto-trades-firefly-iii:binance")
-- _**Known limitations for Binance:**_
-  - Only 500 transactions will be imported for each trading pair. (I'll fix that in the future with a more sophisticated import query with the Binance API)
-  - Rate limiting: if you run this app in debug mode the Binance API will be polled every 10 seconds. You'll probably get blocked sometime from further API calls. Make sure that you're using Binance testnet when running this in debug-mode to not interfer with your IP rates at Binance (or you know what you're doing).
 
 ### Received interest through savings (lending/staking)
 
 - Received interest will be imported automatically
   - transactions get a tag <crypto trading platform> assigned (e.g. "binance")
   - transactions get a note "crypto-trades-firefly-iii:<crypto exchange>" (e.g. "crypto-trades-firefly-iii:binance")
-- _**Known limitations for Binance:**_
-  - As of now the Binance API doesn't report interest received through staking, only received interest from lending can be imported.
 
 ### Withdrawals and deposits in crypto
 

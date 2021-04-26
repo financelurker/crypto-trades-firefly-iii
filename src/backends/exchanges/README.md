@@ -12,6 +12,12 @@ Supported exchanges adds the capability to check your movements from that very e
   - Environmental Variables
     - BINANCE_API_KEY
     - BINANCE_API_SECRET
+  - _**Known limitations:**_
+    - Trades / Fees
+      - Only 500 transactions will be imported for each trading pair. (I'll fix that in the future with a more sophisticated import query with the Binance API)
+      - Rate limiting: if you run this app in debug mode the Binance API will be polled every 10 seconds. You'll probably get blocked sometime from further API calls. Make sure that you're using Binance testnet when running this in debug-mode to not interfer with your IP rates at Binance (or you know what you're doing).
+    - Received interest
+      - As of now the Binance API doesn't report interest received through staking, only received interest from lending can be imported.
 
 In the doing:
 - Kraken
