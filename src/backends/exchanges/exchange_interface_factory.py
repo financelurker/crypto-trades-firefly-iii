@@ -2,11 +2,6 @@ import backends.exchanges as exchanges
 from backends.exchanges.exchange_interface import AbstractCryptoExchangeClient
 
 
-def get_available_exchanges():
-    # get all classes from impls module and check for sub-classes of CryptoExchangeModuleMetaClass
-    pass
-
-
 def get_specific_exchange_interface(trading_platform: str) -> AbstractCryptoExchangeClient:
     for instance in exchanges.list_of_impl_meta_class_instances:
         if trading_platform == instance.get_exchange_name():
