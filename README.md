@@ -41,13 +41,6 @@ The following movements on your crypto trading platform account will be imported
 
 - on the roadmap
 
-### ToDos per Crypto Trade Platform
-
-  - Trades and trading fees
-  - Deposits from / Withdrawals to your other crypto addresses
-  - Received Interest vía lending or staking
-  - On-/Off-ramping from or to SEPA asset account (via IBAN-matching)
-
 # How to Use
 
 This module runs stateless next to your Firefly III instance (as Docker container or standalone) and periodically processes new data from your configured crypto trading platform. Just spin it up and watch your trades being imported right away.
