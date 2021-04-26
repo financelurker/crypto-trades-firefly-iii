@@ -1,7 +1,10 @@
 # Supported Exchanges
 
-So you know the API of your exchange and are interested in extending this service to work with a new exchange which isn't supported by now?
-This documentation gives you all you need to know to add another supported exchange to the library.
+Supported exchanges adds the capability to check your movements from that very exchange, which contains:
+* Trades/Paid fees
+* Received interest from savings
+* Deposits/Withdrawals in crypto
+* Deposits/Withdrawals in fiat
 
 ## How to use supported exchanges
 - Binance (formerly known as [binance-firefly-iii](https://github.com/financelurker/binance-firefly-iii))
@@ -23,6 +26,9 @@ In the doing:
 - ...
 
 ## How to add supported exchanges
+
+So you know the API of your exchange and are interested in extending this service to work with a new exchange which isn't supported by now?
+This documentation gives you all you need to know to add another supported exchange to the library.
 
 ### Overview
 
