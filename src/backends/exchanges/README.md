@@ -39,6 +39,8 @@ To add a new exchange as data source you need to implement two classes which sup
     - Returns the name of the exchange.
   - **get_exchange_client(self) -> AbstractCryptoExchangeClient**
     - Creates and returns an instance of the appropriate AbstractCryptoExchangeClient sub-class.
+  - **static get_instance() -> AbstractCryptoExchangeClientModule**
+    - Creates and returns an instance of that very module class.
 - **AbstractCryptoExchangeClient** is the specific implementation class for the exchange API which provides
   - **get_trading_pairs(self, list_of_symbols_and_codes: List[str]) -> List[TradingPair]**
     - Description: Checks all eligible trading products on the exchange and matches them with the list of currency symbols and codes your Firefly-III accounts support and has asset accounts already set up.
