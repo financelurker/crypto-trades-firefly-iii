@@ -6,6 +6,7 @@ RUN python -m pip install syncer
 RUN python -m pip install Firefly-III-API-Client
 RUN python -m pip install python-binance
 RUN python -m pip install cryptocom-exchange
+RUN python -m pip install aiohttp
 
 RUN mkdir /opt/crypto-trades-firefly-iii
 COPY ./ /opt/crypto-trades-firefly-iii/
