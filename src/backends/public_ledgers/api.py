@@ -22,10 +22,6 @@ class SupportedBlockchainExplorer(metaclass=abc.ABCMeta):
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_tx_addresses_from_address(self, address: str, timeout=25) -> List[str]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def get_blockchain_name(self) -> str:
         raise NotImplementedError
 
@@ -39,6 +35,10 @@ class SupportedBlockchainExplorer(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_address_re(self) -> str:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_tx_addresses_from_address(self, address: str, timeout=25) -> List[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -59,7 +59,7 @@ class SupportedBlockchainModule(metaclass=abc.ABCMeta):
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_blockchain_explorer(self) -> SupportedBlockchainExplorer:
+    def is_enabled(self) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -67,5 +67,5 @@ class SupportedBlockchainModule(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def is_enabled(self) -> bool:
+    def get_blockchain_explorer(self) -> SupportedBlockchainExplorer:
         raise NotImplementedError
