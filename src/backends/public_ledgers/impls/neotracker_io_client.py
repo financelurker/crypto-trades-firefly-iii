@@ -54,7 +54,8 @@ class NeoExplorer(SupportedBlockchainExplorer):
     def get_address_re(self) -> str:
         return address_regular_expression
 
-    def get_transaction_from_ledger(self, tx_id, timeout=25) -> LedgerTransaction:
+    @sync
+    async def get_transaction_from_ledger(self, tx_id, timeout=25) -> LedgerTransaction:
         timeout = aiohttp.ClientTimeout(timeout)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             resp = await session.request(method="get", url=base_url + get_transaction_uri + tx_id)
