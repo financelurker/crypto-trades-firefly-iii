@@ -64,7 +64,7 @@ To import your movements from Binance your Firefly III installation has to be ex
   - expense account
     - add one account for all expenses on that exchange
   - revenue accounts
-    - add one account for all expenses on that exchange
+    - add one account for all revenue on that exchange
   - for all accounts you create
     - set the "notes identifier" in the notes field - see [supported exchanges](src/backends/exchanges/README.md#how-to-use-supported-exchanges) for what "notes identifier" to use
   - for holdings outside your exchange where you deposit from or withdraw to you can configure [supported blockchains](src/backends/public_ledgers#how-to-use) to map transactions as transfers and not just deposits (by revenue) or withdrawals (to expenses).
